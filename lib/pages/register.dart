@@ -42,6 +42,7 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
         ),
+
         body: Stack(
           children: <Widget>[
             // Background image
@@ -61,22 +62,39 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: <Widget>[
                   SizedBox(
                       height: MediaQuery.of(context).padding.top +
-                          kToolbarHeight), // Match app bar height
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Card(
-                        elevation: 8.0,
-                        child: RegisterForm(),
+                          kToolbarHeight),
+ Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Container(
+                      margin: EdgeInsets.only(top: 20.0),
+                      padding: EdgeInsets.all(40.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        border: Border.all(color: Color(0xFFA0522D), width: 2.0),
+                        borderRadius: BorderRadius.circular(12.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            spreadRadius: 0,
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
                       ),
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      child: RegisterForm(),
                     ),
-                  )
+                  ),
+                ),
                 ],
               ),
             ),
           ],
         ),
+
         endDrawer: NavigationMenu(),
+
       ),
     );
   }
@@ -163,7 +181,7 @@ class _RegisterFormState extends State<RegisterForm> {
               child: IconButton(
                 icon: Icon(
                   Icons.arrow_back,
-                  color: Colors.blue,
+                  color: Color(0xFFA0522D),
                 ),
                 iconSize: 30,
                 onPressed: () {
@@ -234,6 +252,14 @@ class _RegisterFormState extends State<RegisterForm> {
           onPressed: () {
             register();
           },
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.all(12.0),
+            backgroundColor: Color(0xFFA0522D), 
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
+          ),
           child: Text('Register'),
         ),
       ],

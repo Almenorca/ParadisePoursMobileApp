@@ -24,9 +24,11 @@ class _LoginPageState extends State<LoginPage> {
       child: Scaffold(
         key: _scaffoldKey,
         extendBodyBehindAppBar: true,
+        
+        //Header
         appBar: AppBar(
           title: const Text(
-            'Paradise Pours',
+            'Welcome to Paradise Pours - Your Ultimate Alcohol Atlas!',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
@@ -42,9 +44,11 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
+        
+        //Page Content
         body: Stack(
           children: <Widget>[
-            // Background image
+            //Background
             Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
@@ -54,39 +58,59 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            // Scrollable content
             SingleChildScrollView(
+
+              //Body
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                  SizedBox(
-                      height: MediaQuery.of(context).padding.top +
-                          kToolbarHeight), // Match app bar height
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Card(
-                        elevation: 8.0,
-                        child: LoginForm(),
+                SizedBox(
+                    height: MediaQuery.of(context).padding.top +
+                        kToolbarHeight),
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Container(
+                      margin: EdgeInsets.only(top: 20.0),
+                      padding: EdgeInsets.all(40.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        border: Border.all(color: Color(0xFFA0522D), width: 2.0),
+                        borderRadius: BorderRadius.circular(12.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            spreadRadius: 0,
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
                       ),
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      child: LoginForm(),
                     ),
-                  )
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
+      ),
+
         endDrawer: NavigationMenu(),
+
       ),
     );
   }
 }
 
+//Login Form
 class LoginForm extends StatefulWidget {
   @override
   _LoginFormState createState() => _LoginFormState();
 }
 
+//Login Function when user presses button.
 class _LoginFormState extends State<LoginForm> {
     final TextEditingController usernameController = TextEditingController(); //Controllers inside class not widget to prevent textform from refreshing.
     final TextEditingController passwordController = TextEditingController();
@@ -113,7 +137,7 @@ class _LoginFormState extends State<LoginForm> {
         //Responses from backend
         if (response.statusCode == 200) {
           print('Login Successful: ${response.body}');
-          await Navigator.pushNamed(context, '/home');
+          await Navigator.pushNamed(context, '/about');
         }
         else if (response.statusCode == 401) {
           var data = jsonDecode(response.body);
@@ -142,27 +166,12 @@ class _LoginFormState extends State<LoginForm> {
       }
     }
 
-  // Track which form to display: 0 - Login, 1 - Create Account, 2 - Recover Account
-  //May need to remove. Can use navigate instead to route to a new page.
-  int _currentFormIndex = 0;
-
-  void _showLoginForm() {
-    setState(() {_currentFormIndex = 0;});
-  }
-
-  void _showCreateAccountForm() {
-    setState(() {_currentFormIndex = 1;});
-  }
-
-  void _showRecoverAccountForm() {
-    setState(() {_currentFormIndex = 2;});
-  }
-
   @override
   Widget build(BuildContext context) {
     return _buildLoginForm();
   }
 
+  //Returns login form
   Widget _buildLoginForm() {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -200,22 +209,24 @@ class _LoginFormState extends State<LoginForm> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            //Login Button
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: ElevatedButton(
                 onPressed: login,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
+                    padding: EdgeInsets.all(12.0),
+                    backgroundColor: Color(0xFFA0522D), 
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
                 ),
-                child: Text(
-                  'Login',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                ),
+                child: Text('Login',),
               ),
             ),
             SizedBox(height: 8.0),
-            
+            //Register Button
             Column(
               children: [
                 Padding(
@@ -225,108 +236,37 @@ class _LoginFormState extends State<LoginForm> {
                       Navigator.pushNamed(context,'/register');
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
+                      padding: EdgeInsets.all(12.0),
+                      backgroundColor: Color(0xFFA0522D), 
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
                     ),
                     child: Text('Create Account'),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: TextButton(
-                    onPressed: _showRecoverAccountForm,
-                    style: TextButton.styleFrom(
-                      foregroundColor: Colors.blue,
-                    ),
-                    child: Text('Forgot Account'),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRecoverAccountForm() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: Colors.blue,
-                ),
-                iconSize: 30,
-                onPressed: _showLoginForm,
+                ],
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+            ],
+          ),
+          //Forget Account Link
+          Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: GestureDetector(
+              onTap: () {
+                  Navigator.pushNamed(context,'/recovery');
+              },
               child: Text(
-                'Recover Account',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                'Forgot Account',
+                style: TextStyle(
+                  color: Colors.blue,
+                  decoration: TextDecoration.underline,
+                ),
               ),
             ),
-          ],
-        ),
-        // Add your recover account form fields and logic here
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            decoration: InputDecoration(labelText: 'Username'),
           ),
-        ),
-        SizedBox(height: 16.0),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            decoration: InputDecoration(labelText: 'Recovery Code'),
-          ),
-        ),
-        SizedBox(height: 16.0),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextButton(
-                onPressed: () {
-                  // sendRecoveryCode
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                ),
-                child: Text(
-                  'Send recovery code',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  // recoverAccount
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(
-                  'Next',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                ),
-              ),
-            ),
-          ],
-        ),
       ],
-    );
-  }
+      );
+    }
 }

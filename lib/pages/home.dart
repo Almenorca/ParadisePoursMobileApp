@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../navigation_menu.dart';
 
 class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
   @override
   _HomePageState createState() => _HomePageState();
 }
@@ -40,7 +42,7 @@ class _HomePageState extends State<HomePage> {
         children: <Widget>[
           // Background image
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               image: DecorationImage(
                 image: AssetImage('assets/images/BlankBackgroundImage.jpg'),
                 fit: BoxFit.cover,
@@ -56,9 +58,9 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                     height: MediaQuery.of(context).padding.top +
                         kToolbarHeight), // Match app bar height
-                Center(
+                const Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(16.0),
+                    padding: EdgeInsets.all(16.0),
                     child: Card(
                       elevation: 8.0,
                       // child: LoginForm(),
@@ -70,7 +72,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      endDrawer: NavigationMenu(),
+      endDrawer: const NavigationMenu(),
     );
   }
 }

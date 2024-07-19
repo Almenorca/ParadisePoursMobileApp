@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../navigation_menu.dart';
 
 class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
   @override
   _SettingsPageState createState() => _SettingsPageState();
 }
@@ -44,7 +46,7 @@ class _SettingsPageState extends State<SettingsPage> {
               alignment: Alignment.centerRight),
         ),
       ),
-      endDrawer: NavigationMenu(),
+      endDrawer: const NavigationMenu(),
     );
   }
 }

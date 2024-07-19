@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import '../navigation_menu.dart';
 
 class RegisterPage extends StatefulWidget {
+  const RegisterPage({super.key});
+
   @override
   _RegisterPageState createState() => _RegisterPageState();
 }
@@ -30,7 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: Colors.orange.withAlpha(150),
+          backgroundColor: const Color(0xffa0522d).withAlpha(150),
           foregroundColor: Colors.white,
           leading: Container(
             decoration: const BoxDecoration(
@@ -42,16 +44,15 @@ class _RegisterPageState extends State<RegisterPage> {
             ),
           ),
         ),
-
         body: Stack(
           children: <Widget>[
             // Background image
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/images/BlankBackgroundImage.jpg'),
+                  image: AssetImage('assets/images/Bar_pic.jpeg'),
                   fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
+                  alignment: Alignment.center,
                 ),
               ),
             ),
@@ -62,113 +63,96 @@ class _RegisterPageState extends State<RegisterPage> {
                 children: <Widget>[
                   SizedBox(
                       height: MediaQuery.of(context).padding.top +
-                          kToolbarHeight),
- Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
-                    child: Container(
-                      margin: EdgeInsets.only(top: 20.0),
-                      padding: EdgeInsets.all(40.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        border: Border.all(color: Color(0xFFA0522D), width: 2.0),
-                        borderRadius: BorderRadius.circular(12.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            spreadRadius: 0,
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
+                          kToolbarHeight), // Match app bar height
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Card(
+                        elevation: 8.0,
+                        child: RegisterForm(),
                       ),
-                      width: MediaQuery.of(context).size.width * 0.8,
-                      child: RegisterForm(),
                     ),
-                  ),
-                ),
+                  )
                 ],
               ),
             ),
           ],
         ),
-
-        endDrawer: NavigationMenu(),
-
+        endDrawer: const NavigationMenu(),
       ),
     );
   }
 }
 
 class RegisterForm extends StatefulWidget {
+  const RegisterForm({super.key});
+
   @override
   _RegisterFormState createState() => _RegisterFormState();
 }
 
 class _RegisterFormState extends State<RegisterForm> {
-    final TextEditingController firstnameController = TextEditingController();
-    final TextEditingController lastnameController = TextEditingController(); 
-    final TextEditingController usernameController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController phoneController = TextEditingController();
-    String feedbackMessage = '';
+  final TextEditingController firstnameController = TextEditingController();
+  final TextEditingController lastnameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  String feedbackMessage = '';
 
-    @override
-    Widget build(BuildContext context) {
-      return _buildRegisterForm();
-    }
-    Future<void> register() async {
-      
-      var url = Uri.parse('http://localhost:5000/api/register');
+  @override
+  Widget build(BuildContext context) {
+    return _buildRegisterForm();
+  }
 
-      try {
-        var response = await http.post(
-          url,
-          headers: {
-            "Content-Type": "application/json",
+  Future<void> register() async {
+    var url = Uri.parse('http://localhost:5000/api/register');
+
+    try {
+      var response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode(
+          {
+            'FirstName': firstnameController.text.trim(),
+            'LastName': lastnameController.text.trim(),
+            'Username': usernameController.text.trim(),
+            'Password': passwordController.text.trim(),
+            'Email': emailController.text.trim(),
+            'Phone': phoneController.text.trim()
           },
-          body: jsonEncode(
-            {
-              'FirstName': firstnameController.text.trim(),
-              'LastName': lastnameController.text.trim(),
-              'Username': usernameController.text.trim(),
-              'Password': passwordController.text.trim(),
-              'Email': emailController.text.trim(),
-              'Phone': phoneController.text.trim()
-            },
-          ),
-        );
+        ),
+      );
 
-        if (response.statusCode == 201) {
-          print('Registration Successful: ${response.body}');
-          Navigator.pushNamed(context, '/login');
-        } 
-        else if (response.statusCode == 401) {
-          var data = jsonDecode(response.body);
-          setState(
-            () {
-              feedbackMessage = data['error'];
-            },
-          );
-        } 
-        else {
-          var data = jsonDecode(response.body);
-          setState(
-            () {
-              feedbackMessage = data['error'];
-            },
-          );
-        }
-      } catch (e) {
+      if (response.statusCode == 201) {
+        print('Registration Successful: ${response.body}');
+        Navigator.pushNamed(context, '/login');
+      } else if (response.statusCode == 401) {
+        var data = jsonDecode(response.body);
         setState(
           () {
-            feedbackMessage = 'Failed to connect to the server';
-            print('Error during register: $e');
+            feedbackMessage = data['error'];
+          },
+        );
+      } else {
+        var data = jsonDecode(response.body);
+        setState(
+          () {
+            feedbackMessage = data['error'];
           },
         );
       }
+    } catch (e) {
+      setState(
+        () {
+          feedbackMessage = 'Failed to connect to the server';
+          print('Error during register: $e');
+        },
+      );
     }
+  }
 
   Widget _buildRegisterForm() {
     return Column(
@@ -179,18 +163,17 @@ class _RegisterFormState extends State<RegisterForm> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: Color(0xFFA0522D),
-                ),
-                iconSize: 30,
-                onPressed: () {
-                  Navigator.pushNamed(context, '/login');
-                }
-              ),
+                  icon: const Icon(
+                    Icons.arrow_back,
+                    color: Colors.blue,
+                  ),
+                  iconSize: 30,
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  }),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
+            const Padding(
+              padding: EdgeInsets.all(8.0),
               child: Text(
                 'Create Account',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -203,65 +186,65 @@ class _RegisterFormState extends State<RegisterForm> {
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: firstnameController,
-            decoration: InputDecoration(labelText: 'First Name'),
+            decoration: const InputDecoration(labelText: 'First Name'),
           ),
         ),
-        SizedBox(height: 16.0),
-                Padding(
+        const SizedBox(height: 16.0),
+        Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: lastnameController,
-            decoration: InputDecoration(labelText: 'Last Name'),
+            decoration: const InputDecoration(labelText: 'Last Name'),
           ),
         ),
-        SizedBox(height: 16.0),
-                Padding(
+        const SizedBox(height: 16.0),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: emailController,
+            decoration: const InputDecoration(labelText: 'Email'),
+          ),
+        ),
+        const SizedBox(height: 16.0),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: TextField(
+            controller: phoneController,
+            decoration: const InputDecoration(labelText: 'Phone Number'),
+          ),
+        ),
+        const SizedBox(height: 16.0),
+        Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: usernameController,
-            decoration: InputDecoration(labelText: 'Username'),
+            decoration: const InputDecoration(labelText: 'Username'),
           ),
         ),
-        SizedBox(height: 16.0),
-                Padding(
+        const SizedBox(height: 16.0),
+        Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             obscureText: true,
             controller: passwordController,
-            decoration: InputDecoration(labelText: 'Password'),
+            decoration: const InputDecoration(labelText: 'Password'),
           ),
         ),
-        SizedBox(height: 16.0),
-                Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: emailController,
-            decoration: InputDecoration(labelText: 'Email'),
-          ),
-        ),
-        SizedBox(height: 16.0),
-                Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: phoneController,
-            decoration: InputDecoration(labelText: 'Phone Number'),
-          ),
-        ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         ElevatedButton(
           onPressed: () {
             register();
           },
           style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.all(12.0),
-            backgroundColor: Color(0xFFA0522D), 
+            backgroundColor: const Color(0xffa0522d),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8.0),
-            ),
           ),
-          child: Text('Register'),
+          child: const Text(
+            'Register',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+          ),
         ),
+        const SizedBox(height: 16.0),
       ],
     );
   }

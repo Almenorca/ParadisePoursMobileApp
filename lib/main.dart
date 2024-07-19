@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'auth_service.dart';
+import '../components/user_provider.dart';
 
 import 'package:paradise_pours_app/pages/home.dart';
 import 'package:paradise_pours_app/pages/beer.dart';
@@ -13,7 +13,7 @@ import 'package:paradise_pours_app/pages/about.dart';
 import 'package:paradise_pours_app/pages/verify_email.dart';
 import 'package:paradise_pours_app/pages/change_password.dart';
 import 'package:paradise_pours_app/pages/register.dart';
-// import 'package:paradise_pours_app/pages/recovery.dart';
+import 'package:paradise_pours_app/pages/recovery.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => AuthService(),
+      create: (context) => UserProvider(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Paradise Pours', // name of the app on phone
@@ -35,19 +35,19 @@ class MyApp extends StatelessWidget {
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrangeAccent),
         ),
         // home: HomePage(),
-        home: LoginPage(),
+        home: const LoginPage(),
         routes: {
-          '/home': (context) => HomePage(),
-          '/beer': (context) => BeerPage(),
-          '/liquor': (context) => LiquorPage(),
-          '/wine': (context) => WinePage(),
-          '/login': (context) => LoginPage(),
-          '/settings': (context) => SettingsPage(),
-          '/about': (context) => AboutUsPage(),
-          '/verifyemail': (context) => VerifyEmailPage(),
-          '/changepassword': (context) => ChangePasswordPage(),
-          '/register': (context) => RegisterPage(),
-          // '/Recovery': (context) => RecoveryPage(),
+          '/home': (context) => const HomePage(),
+          '/beer': (context) => const BeerPage(),
+          '/liquor': (context) => const LiquorPage(),
+          '/wine': (context) => const WinePage(),
+          '/login': (context) => const LoginPage(),
+          '/settings': (context) => const SettingsPage(),
+          '/about': (context) => const AboutUsPage(),
+          '/verifyemail': (context) => const VerifyEmailPage(),
+          '/changepassword': (context) => const ChangePasswordPage(),
+          '/register': (context) => const RegisterPage(),
+          '/recovery': (context) => const RecoveryPage(),
         },
       ),
     );

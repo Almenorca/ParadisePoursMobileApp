@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../navigation_menu.dart';
 
 class VerifyEmailPage extends StatefulWidget {
+  const VerifyEmailPage({super.key});
+
   @override
   _VerifyEmailPageState createState() => _VerifyEmailPageState();
 }
@@ -45,13 +47,13 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
               alignment: Alignment.centerRight,
             ),
           ),
-          Center(
+          const Center(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: EdgeInsets.all(16.0),
               child: Card(
                 elevation: 8.0,
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   // child: RegisterForm(),
                 ),
               ),
@@ -59,7 +61,7 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           )
         ],
       ),
-      endDrawer: NavigationMenu(),
+      endDrawer: const NavigationMenu(),
     );
   }
 }

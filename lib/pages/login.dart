@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+// import 'package:provider/provider.dart'; // Import the provider package
+
 import '../navigation_menu.dart';
+// import '../components/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }
@@ -17,6 +22,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    // var userProvider = Provider.of<UserProvider>(context);
+
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -24,15 +31,13 @@ class _LoginPageState extends State<LoginPage> {
       child: Scaffold(
         key: _scaffoldKey,
         extendBodyBehindAppBar: true,
-        
-        //Header
         appBar: AppBar(
           title: const Text(
-            'Welcome to Paradise Pours - Your Ultimate Alcohol Atlas!',
+            'Paradise Pours',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: Colors.orange.withAlpha(150),
+          backgroundColor: const Color(0xffa0522d).withAlpha(150),
           foregroundColor: Colors.white,
           leading: Container(
             decoration: const BoxDecoration(
@@ -44,140 +49,116 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
-        
-        //Page Content
         body: Stack(
           children: <Widget>[
-            //Background
+            // Background image
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/images/BlankBackgroundImage.jpg'),
+                  image: AssetImage('assets/images/Bar_pic.jpeg'),
                   fit: BoxFit.cover,
-                  alignment: Alignment.centerRight,
+                  alignment: Alignment.center,
                 ),
               ),
             ),
+            // Scrollable content
             SingleChildScrollView(
-
-              //Body
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: <Widget>[
-                SizedBox(
-                    height: MediaQuery.of(context).padding.top +
-                        kToolbarHeight),
-                Center(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 20.0),
-                    child: Container(
-                      margin: EdgeInsets.only(top: 20.0),
-                      padding: EdgeInsets.all(40.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.9),
-                        border: Border.all(color: Color(0xFFA0522D), width: 2.0),
-                        borderRadius: BorderRadius.circular(12.0),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
-                            spreadRadius: 0,
-                            blurRadius: 20,
-                            offset: Offset(0, 10),
-                          ),
-                        ],
+                  SizedBox(
+                      height: MediaQuery.of(context).padding.top +
+                          kToolbarHeight), // Match app bar height
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(16.0),
+                      child: Card(
+                        elevation: 8.0,
+                        child: LoginForm(),
                       ),
-                      width: MediaQuery.of(context).size.width * 0.8,
-                      child: LoginForm(),
                     ),
-                  ),
-                ),
-              ],
+                  )
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-
-        endDrawer: NavigationMenu(),
-
+          ],
+        ),
+        endDrawer: const NavigationMenu(),
       ),
     );
   }
 }
 
-//Login Form
 class LoginForm extends StatefulWidget {
+  const LoginForm({super.key});
+
   @override
   _LoginFormState createState() => _LoginFormState();
 }
 
-//Login Function when user presses button.
 class _LoginFormState extends State<LoginForm> {
-    final TextEditingController usernameController = TextEditingController(); //Controllers inside class not widget to prevent textform from refreshing.
-    final TextEditingController passwordController = TextEditingController();
-    String feedbackMessage = '';
+  final TextEditingController usernameController =
+      TextEditingController(); //Controllers inside class not widget to prevent textform from refreshing.
+  final TextEditingController passwordController = TextEditingController();
+  String feedbackMessage = '';
 
-    Future<void> login() async {
-      
-      var url = Uri.parse('http://localhost:5000/api/login');
+  Future<void> login() async {
+    var url = Uri.parse('http://localhost:5000/api/login');
 
-      try {
-        var response = await http.post(
-          url,
-          headers: {
-            "Content-Type": "application/json",
+    try {
+      var response = await http.post(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode(
+          {
+            'Username': usernameController.text.trim(),
+            'Password': passwordController.text.trim(),
           },
-          body: jsonEncode(
-            {
-              'Username': usernameController.text.trim(),
-              'Password': passwordController.text.trim(),
-            },
-          ),
-        );
+        ),
+      );
 
-        //Responses from backend
-        if (response.statusCode == 200) {
-          print('Login Successful: ${response.body}');
-          await Navigator.pushNamed(context, '/about');
-        }
-        else if (response.statusCode == 401) {
-          var data = jsonDecode(response.body);
-          setState(
-            () {
-              feedbackMessage = data['error'];
-            },
-          );
-        } 
-        else {
-          var data = jsonDecode(response.body);
-          setState(
-            () {
-              feedbackMessage = data['error'];
-            },
-          );
-        }
-      } 
-      catch (e) {
+      //Responses from backend
+      if (response.statusCode == 200) {
+        print('Login Successful: ${response.body}');
+        await Navigator.pushNamed(context, '/home');
+      } else if (response.statusCode == 401) {
+        var data = jsonDecode(response.body);
         setState(
           () {
-            feedbackMessage = 'Failed to connect to the server';
-            print('Error during login: $e');
+            feedbackMessage = data['error'];
+          },
+        );
+      } else {
+        var data = jsonDecode(response.body);
+        setState(
+          () {
+            feedbackMessage = data['error'];
           },
         );
       }
+    } catch (e) {
+      setState(
+        () {
+          feedbackMessage = 'Failed to connect to the server';
+          print('Error during login: $e');
+        },
+      );
     }
+  }
 
   @override
   Widget build(BuildContext context) {
     return _buildLoginForm();
   }
 
-  //Returns login form
   Widget _buildLoginForm() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
+        const Padding(
+          padding: EdgeInsets.all(8.0),
           child: Text(
             'Sign In',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -187,86 +168,79 @@ class _LoginFormState extends State<LoginForm> {
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: usernameController,
-            decoration: InputDecoration(labelText: 'Username'),
+            decoration: const InputDecoration(labelText: 'Username'),
           ),
         ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             obscureText: true,
             controller: passwordController,
-            decoration: InputDecoration(labelText: 'Password'),
+            decoration: const InputDecoration(labelText: 'Password'),
           ),
         ),
-        SizedBox(height: 10.0),
+        const SizedBox(height: 10.0),
         Text(
           feedbackMessage,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.red,
           ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            //Login Button
             Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: const EdgeInsets.all(8.0),
               child: ElevatedButton(
                 onPressed: login,
                 style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(12.0),
-                    backgroundColor: Color(0xFFA0522D), 
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
+                  backgroundColor: const Color(0xffa0522d),
+                  foregroundColor: Colors.white,
                 ),
-                child: Text('Login',),
-              ),
-            ),
-            SizedBox(height: 8.0),
-            //Register Button
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: ElevatedButton(
-                    onPressed: (){
-                      Navigator.pushNamed(context,'/register');
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.all(12.0),
-                      backgroundColor: Color(0xFFA0522D), 
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                    ),
-                    child: Text('Create Account'),
-                  ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          //Forget Account Link
-          Padding(
-            padding: const EdgeInsets.only(top: 20.0),
-            child: GestureDetector(
-              onTap: () {
-                  Navigator.pushNamed(context,'/recovery');
-              },
-              child: Text(
-                'Forgot Account',
-                style: TextStyle(
-                  color: Colors.blue,
-                  decoration: TextDecoration.underline,
+                child: const Text(
+                  'Login',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
                 ),
               ),
             ),
-          ),
+            const SizedBox(height: 8.0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/register');
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                ),
+                child: const Text(
+                  'Register',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+              ),
+            ),
+          ],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/recovery');
+                },
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.blue,
+                ),
+                child: const Text('Forgot Password?'),
+              ),
+            ),
+          ],
+        )
       ],
-      );
-    }
+    );
+  }
 }

@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:paradise_pours_app/auth_service.dart';
 import 'package:provider/provider.dart';
 
-import '../components/user_provider.dart';
-
 import 'package:paradise_pours_app/pages/home.dart';
 import 'package:paradise_pours_app/pages/beer.dart';
 import 'package:paradise_pours_app/pages/liquor.dart';
@@ -17,12 +15,7 @@ import 'package:paradise_pours_app/pages/register.dart';
 import 'package:paradise_pours_app/pages/recovery.dart';
 
 void main() {
-  runApp(
-    ChangeNotifierProvider<AuthService>(
-      create: (_) => AuthService(), // Provide the AuthService
-      child: MyApp(),
-    ),
-  );
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -32,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => UserProvider(),
+      create: (_) => AuthService(),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Paradise Pours', // name of the app on phone

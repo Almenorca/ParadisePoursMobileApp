@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-// import 'package:provider/provider.dart'; // Import the provider package
-
+import '../auth_service.dart';
 import '../navigation_menu.dart';
-// import '../components/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -100,10 +98,31 @@ class _LoginFormState extends State<LoginForm> {
   final TextEditingController usernameController =
       TextEditingController(); //Controllers inside class not widget to prevent textform from refreshing.
   final TextEditingController passwordController = TextEditingController();
+  bool hidePassword = true;
   String feedbackMessage = '';
 
+  bool validateForm() {
+    return usernameController.text.isNotEmpty &&
+         passwordController.text.isNotEmpty;
+  }
+
+  void togglePasswordVisibility() {
+    setState(() {
+      hidePassword = !hidePassword;
+    });
+  }
+
   Future<void> login() async {
-    var url = Uri.parse('http://localhost:5000/api/login');
+    var url = Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/login');
+
+    if(!validateForm()){
+        setState(
+          () {
+            feedbackMessage = "All fields must be filled";
+          },
+        );
+      return;
+    }
 
     try {
       var response = await http.post(
@@ -121,16 +140,12 @@ class _LoginFormState extends State<LoginForm> {
 
       //Responses from backend
       if (response.statusCode == 200) {
-        print('Login Successful: ${response.body}');
-        await Navigator.pushNamed(context, '/home');
-      } else if (response.statusCode == 401) {
         var data = jsonDecode(response.body);
-        setState(
-          () {
-            feedbackMessage = data['error'];
-          },
-        );
-      } else {
+        User user = User.fromJson(data['user']); // Save user data.
+        AuthService().saveUser(user);
+        await Navigator.pushNamed(context, '/home');
+      } 
+      else {
         var data = jsonDecode(response.body);
         setState(
           () {
@@ -153,12 +168,14 @@ class _LoginFormState extends State<LoginForm> {
     return _buildLoginForm();
   }
 
+
+  //Returns login form
   Widget _buildLoginForm() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Padding(
-          padding: EdgeInsets.all(8.0),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
           child: Text(
             'Sign In',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -168,79 +185,97 @@ class _LoginFormState extends State<LoginForm> {
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: usernameController,
-            decoration: const InputDecoration(labelText: 'Username'),
+            decoration: InputDecoration(labelText: 'Username'),
           ),
         ),
-        const SizedBox(height: 16.0),
+        SizedBox(height: 16.0),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
-            obscureText: true,
+            obscureText: hidePassword,
             controller: passwordController,
-            decoration: const InputDecoration(labelText: 'Password'),
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    hidePassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: togglePasswordVisibility, // Toggle button pressed
+                ),
+              ),
           ),
         ),
-        const SizedBox(height: 10.0),
+        SizedBox(height: 10.0),
         Text(
           feedbackMessage,
-          style: const TextStyle(
+          style: TextStyle(
             color: Colors.red,
           ),
         ),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            //Login Button
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const EdgeInsets.all(20.0),
               child: ElevatedButton(
                 onPressed: login,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xffa0522d),
-                  foregroundColor: Colors.white,
+                    padding: EdgeInsets.all(12.0),
+                    backgroundColor: Color(0xFFA0522D), 
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
                 ),
-                child: const Text(
-                  'Login',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+                child: Text('Login',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+              ),
+            ),
+            SizedBox(height: 8.0),
+            //Register Button
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: (){
+                      Navigator.pushNamed(context,'/register');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.all(12.0),
+                      backgroundColor: Color(0xFFA0522D), 
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                    child: Text('Create Account',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                  ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          //Forget Account Link
+          Padding(
+            padding: const EdgeInsets.only(top: 20.0),
+            child: GestureDetector(
+              onTap: () {
+                  Navigator.pushNamed(context,'/recovery');
+              },
+              child: Text(
+                'Forgot Account',
+                style: TextStyle(
+                  color: Color(0xFFA0522D),
+                  decoration: TextDecoration.underline,
                 ),
               ),
             ),
-            const SizedBox(height: 8.0),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/register');
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
-                ),
-                child: const Text(
-                  'Register',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-              ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/recovery');
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                ),
-                child: const Text('Forgot Password?'),
-              ),
-            ),
-          ],
-        )
+          ),
       ],
-    );
-  }
+      );
+    }
 }

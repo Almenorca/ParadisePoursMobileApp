@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:paradise_pours_app/auth_service.dart';
 import 'package:provider/provider.dart';
 
 import '../components/user_provider.dart';
@@ -16,7 +17,12 @@ import 'package:paradise_pours_app/pages/register.dart';
 import 'package:paradise_pours_app/pages/recovery.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider<AuthService>(
+      create: (_) => AuthService(), // Provide the AuthService
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

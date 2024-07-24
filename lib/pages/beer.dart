@@ -141,43 +141,81 @@ class _BeerListState extends State<BeerList> {
     }
   }
 
-  //Creates a pop-up that will show the Beer facts, favorite, ratings, etc. on click
-  void handleBeerClick (dynamic beer) async {
-    setState(() {
-      selectedBeer = beer;
-    });
-    
-    checkFav(selectedBeer);
-    getRatings(selectedBeer);
-    getComments(selectedBeer);
+void handleBeerClick(dynamic beer) async {
+  setState(() {
+    selectedBeer = beer;
+  });
 
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4.0),
-          ),
-          //Passes variables and functions to the popup menu.
-          child: DisplayDrink(drink: selectedBeer, userId: _userId, favBoolean: favBoolean, 
-          favDrink: favBeer, unfavDrink: unfavBeer, 
-          rateDrink: rateBeer, avgRating: avgRating, comments: comments),
-        );
-      },
-    );
+  await Future.wait([
+    checkFav(selectedBeer),
+    getRatings(selectedBeer),
+    getComments(selectedBeer)
+  ]);
+
+  // Show dialog after all async operations are complete
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4.0),
+        ),
+        child: DisplayDrink(
+          drink: selectedBeer,
+          userId: _userId,
+          favBoolean: favBoolean,
+          avgRating: avgRating,
+          favDrink: favBeer,
+          unfavDrink: unfavBeer,
+          rateDrink: rateBeer,
+          comments: comments,
+        ),
+      );
+    },
+  );
+}
+
+Future<void> checkFav(dynamic selectedBeer) async {
+  print("original boolean = $favBoolean");
+  List<dynamic> favorites = selectedBeer['Favorites'];
+  print("$selectedBeer['Favorites']");
+  setState(() {
+    favBoolean = (favorites.contains(_userId.toString()));
+  });
+  print("new boolean = $favBoolean");
+}
+
+Future<void> getRatings(dynamic selectedBeer) async {
+  try {
+    var uri = Uri.parse('http://localhost:5000/api/beerRatings').replace(queryParameters: {'_id': selectedBeer['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        avgRating = data['avgRating'];
+      });
+      print('Successfully retrieved average ratings. avgRating: $avgRating');
+    }
+  } catch (error) {
+    print('Error getting ratings: $error');
   }
+}
 
-  // Check if userId exists in the beer's Favorites array. Sets boolean to T/F
-  void checkFav(selectedBeer) async {
-    print("original boolean = $favBoolean");
-    List<dynamic> favorites = selectedBeer['Favorites'];
-    print("$selectedBeer['Favorites']");
-    setState((){
-      favBoolean = (favorites.contains(_userId.toString()));
-    });
-    print("new boolean = $favBoolean");
+Future<void> getComments(dynamic selectedBeer) async {
+  try {
+    var uri = Uri.parse('http://localhost:5000/api/getBeerComments').replace(queryParameters: {'_id': selectedBeer['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        comments = List<Map<String, dynamic>>.from(data['comments']);
+      });
+      print('Successfully retrieved comments. comments: $comments');
+    }
+  } catch (error) {
+    print('Error getting comments: $error');
   }
-
+}
   //Unfavorites Beer
   void unfavBeer() async {
     try {
@@ -228,54 +266,12 @@ class _BeerListState extends State<BeerList> {
                             'Stars': rating,
                             'Comment': comment,}));
       if (response.statusCode == 200) {
-        setState(() {
-          favBoolean = true;
-        });
         fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
         print('Successfully favorited. favBoolean: $favBoolean');
       }
     } 
     catch (error) {
       print('Error favoriting: $error');
-    } 
-  }
-
-  //Gets average rating for Beer.
-  void getRatings(selectedBeer) async{
-      try {
-      var uri = Uri.parse('http://localhost:5000/api/beerRatings').replace(queryParameters: {'_id': selectedBeer['_id']});
-      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-
-        setState(() {
-          avgRating = data['avgRating'];
-        });
-        
-        print('Successfully retrieved average ratings. favBoolean: $favBoolean');
-      }
-    } 
-    catch (error) {
-      print('Error gettings ratings: $error');
-    } 
-  }
-  //Gets comments for Beer.
-    void getComments(selectedBeer) async{
-      try {
-      var uri = Uri.parse('http://localhost:5000/api/getBeerComments').replace(queryParameters: {'_id': selectedBeer['_id']});
-      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-
-        setState(() {
-          comments = List<Map<String, dynamic>>.from(data['comments']);
-        });
-        
-        print('Successfully retrieved average ratings. favBoolean: $favBoolean');
-      }
-    } 
-    catch (error) {
-      print('Error gettings ratings: $error');
     } 
   }
 

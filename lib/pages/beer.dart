@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:paradise_pours_app/auth_service.dart';
 import 'dart:convert';
 
 import '../navigation_menu.dart';
@@ -101,16 +102,32 @@ class _BeerListState extends State<BeerList> {
   bool validSearch = true;
   String filterSelection = '';
   List<dynamic> filteredBeers = [];
+  int? _userId; //User Id. Used for favorite and rating
+  bool favBoolean = false; //Used as a checker if user liked a beer. Will be used to passed down for favorite.
 
-  @override
+  @override //Similar to useEffect()
   void initState() {
     super.initState();
+    _loadUserData();
     fetchAllBeers();
   }
 
+
+  //Initializes user id.
+  Future<void> _loadUserData() async {
+    final authService = AuthService();
+    final user = await authService.getUser();
+    if (user != null) {
+      setState(() {
+        _userId = user.userId;
+      });
+    }
+  }
+  
+  //Fetches all beer upon entering page.
   Future<void> fetchAllBeers() async {
     try {
-      var response = await http.get(Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/getAllBeers'));
+      var response = await http.get(Uri.parse('http://localhost:5000/api/getAllBeers'));
       List<dynamic> beersData = json.decode(response.body)['beers'];
       beersData.sort((a, b) => a['Name'].compareTo(b['Name']));
       setState(() {
@@ -121,26 +138,80 @@ class _BeerListState extends State<BeerList> {
     }
   }
 
-  void handleBeerClick(dynamic beer) {
+  //Creates a pop-up that will show the Beer facts, favorite, ratings, etc. on click
+  void handleBeerClick (dynamic beer) async {
     setState(() {
       selectedBeer = beer;
     });
+    
+    checkFav(selectedBeer);
 
-    //Creates a pop-up that will show the nutrition facts, favorite, ratings, etc. on click
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
+            borderRadius: BorderRadius.circular(4.0),
           ),
-          child: DisplayBeer(beer: selectedBeer),
+          //Passes clicked beer and User Id to facts/rating menu. If favBoolean is true, passes unFavBeer() to allow user unfavorite.
+          child: DisplayBeer(beer: selectedBeer, userId: _userId, favBoolean: favBoolean, favBeer: favBeer, unfavBeer: unfavBeer),
         );
       },
     );
   }
 
+  // Check if userId exists in the beer's Favorites array. Sets boolean to T/F
+  void checkFav(selectedBeer) async {
+    print("original boolean = $favBoolean");
+    List<dynamic> favorites = selectedBeer['Favorites'];
+    print("$selectedBeer['Favorites']");
+    setState((){
+      favBoolean = (favorites.contains(_userId.toString()));
+    });
+    print("new boolean = $favBoolean");
+  }
 
+  //Unfavorites Beer
+  void unfavBeer() async {
+    try {
+      var response = await http.post(Uri.parse('http://localhost:5000/api/unfavoriteBeer'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+                              '_id': selectedBeer['_id']}));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = false;
+        });
+        fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
+      print('Successfully unfavorited. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error unfavoriting: $error');
+    }
+  }
+
+  //Favorites Beer
+  void favBeer() async {
+      try {
+      var response = await http.post(Uri.parse('http://localhost:5000/api/favoriteBeer'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(),
+                            '_id': selectedBeer['_id']}));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = true;
+        });
+        fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
+        print('Successfully favorited. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error favoriting: $error');
+    } 
+  }
+
+  //Searches beer via searchbar.
   void handleSearch() async {
     try {
       var response = await http.post(Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/searchBeer'),
@@ -284,3 +355,4 @@ class _BeerListState extends State<BeerList> {
     );
   }
 }
+

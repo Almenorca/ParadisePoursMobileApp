@@ -99,15 +99,75 @@ class _RegisterFormState extends State<RegisterForm> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   String feedbackMessage = '';
+  bool showUsernameCriteria = false;
+  bool showPasswordCriteria = false;
+  bool hidePassword = true;
+  bool lenInput = false;
+  bool letterInput = false;
+  bool pLenInput = false;
+  bool pLettInput = false;
+  bool pNumInput = false;
+  bool pSpecInput = false;
+
+  @override
+  void initState() {
+    super.initState();
+    usernameController.addListener(validateUsername);
+    passwordController.addListener(validatePassword);
+  }
 
   @override
   Widget build(BuildContext context) {
     return _buildRegisterForm();
   }
+  
+  bool validateForm() {
+  return firstnameController.text.isNotEmpty &&
+         lastnameController.text.isNotEmpty &&
+         usernameController.text.isNotEmpty &&
+         passwordController.text.isNotEmpty &&
+         emailController.text.isNotEmpty &&
+         phoneController.text.isNotEmpty;
+}
+
+  void validateUsername() {
+    final username = usernameController.text;
+
+    setState(() {
+      lenInput = username.length >= 3 && username.length <= 18;
+      letterInput = RegExp(r'[a-zA-Z]').hasMatch(username);
+    });
+  }
+
+  void validatePassword() {
+    final password = passwordController.text;
+
+    setState(() {
+      pLenInput = password.length >= 8 && password.length <= 32;
+      pLettInput = RegExp(r'[a-zA-Z]').hasMatch(password);
+      pNumInput = password.contains(RegExp(r'[0-9]'));
+      pSpecInput = password.contains(RegExp(r'[!@#$%^&*]'));
+    });
+  }
+
+  void togglePasswordVisibility() {
+    setState(() {
+      hidePassword = !hidePassword;
+    });
+  }
 
   Future<void> register() async {
-    var url = Uri.parse('http://localhost:5000/api/register');
+    var url = Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/register');
 
+    if(!validateForm()){
+        setState(
+          () {
+            feedbackMessage = "All fields must be filled";
+          },
+        );
+      return;
+    }
+    
     try {
       var response = await http.post(
         url,
@@ -129,14 +189,8 @@ class _RegisterFormState extends State<RegisterForm> {
       if (response.statusCode == 201) {
         print('Registration Successful: ${response.body}');
         Navigator.pushNamed(context, '/login');
-      } else if (response.statusCode == 401) {
-        var data = jsonDecode(response.body);
-        setState(
-          () {
-            feedbackMessage = data['error'];
-          },
-        );
-      } else {
+      } 
+      else {
         var data = jsonDecode(response.body);
         setState(
           () {
@@ -165,7 +219,7 @@ class _RegisterFormState extends State<RegisterForm> {
               child: IconButton(
                   icon: const Icon(
                     Icons.arrow_back,
-                    color: Colors.blue,
+                    color: Color(0xffa0522d),
                   ),
                   iconSize: 30,
                   onPressed: () {
@@ -181,7 +235,6 @@ class _RegisterFormState extends State<RegisterForm> {
             ),
           ],
         ),
-        // Add your create account form fields and logic here
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
@@ -210,24 +263,92 @@ class _RegisterFormState extends State<RegisterForm> {
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: phoneController,
-            decoration: const InputDecoration(labelText: 'Phone Number'),
+            decoration: const InputDecoration(
+              labelText: 'Phone Number',
+              hintText: 'XXX-XXX-XXXX'),
           ),
         ),
         const SizedBox(height: 16.0),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            controller: usernameController,
-            decoration: const InputDecoration(labelText: 'Username'),
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              setState(() {
+                showUsernameCriteria = hasFocus;
+              });
+            },
+            child: TextField(
+              controller: usernameController,
+              decoration: const InputDecoration(labelText: 'Username'),
+            ),
           ),
         ),
         const SizedBox(height: 16.0),
         Padding(
           padding: const EdgeInsets.all(8.0),
-          child: TextField(
-            obscureText: true,
-            controller: passwordController,
-            decoration: const InputDecoration(labelText: 'Password'),
+          child: Focus(
+            onFocusChange: (hasFocus) {
+              setState(() {
+                showPasswordCriteria = hasFocus;
+              });
+            },
+            child: TextField(
+              obscureText: hidePassword,
+              controller: passwordController,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    hidePassword ? Icons.visibility : Icons.visibility_off,
+                    color: Colors.grey,
+                  ),
+                  onPressed: togglePasswordVisibility, // Toggle button pressed
+                ),
+              ),
+            ),
+            ),
+          ),
+        //Username Criteria
+        Visibility(
+          visible: showUsernameCriteria,
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Username must contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                Text('At least one letter*', style: TextStyle(color: letterInput ? Colors.green : Colors.red)),
+                Text('3 to 18 characters*', style: TextStyle(color: lenInput ? Colors.green : Colors.red)),
+                Text('Username may contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                Text('Numbers', style: TextStyle(color: Colors.grey)),
+                Text('Underscores', style: TextStyle(color: Colors.grey)),
+                Text('Hyphens', style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          ),
+        ),
+        //Password Criteria
+        Visibility(
+          visible: showPasswordCriteria,
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Password must contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                Text('8 to 32 characters*', style: TextStyle(color: pLenInput ? Colors.green : Colors.red)),
+                Text('At least one letter*', style: TextStyle(color: pLettInput ? Colors.green : Colors.red)),
+                Text('At least one number*', style: TextStyle(color: pNumInput ? Colors.green : Colors.red)),
+                Text('At least one special character*', style: TextStyle(color: pSpecInput ? Colors.green : Colors.red)),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 10.0),
+        Text(
+          feedbackMessage,
+          style: const TextStyle(
+            color: Colors.red,
           ),
         ),
         const SizedBox(height: 16.0),
@@ -236,8 +357,12 @@ class _RegisterFormState extends State<RegisterForm> {
             register();
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xffa0522d),
+            padding: const EdgeInsets.all(12.0),
+            backgroundColor: const Color(0xFFA0522D), 
             foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
+            ),
           ),
           child: const Text(
             'Register',

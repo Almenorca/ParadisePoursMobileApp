@@ -17,7 +17,7 @@ class _RecoveryPageState extends State<RecoveryPage> {
     _scaffoldKey.currentState?.openEndDrawer();
   }
 
-  @override
+ @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
@@ -32,7 +32,7 @@ class _RecoveryPageState extends State<RecoveryPage> {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: const Color(0xffa0522d).withAlpha(150),
+          backgroundColor: Colors.orange.withAlpha(150),
           foregroundColor: Colors.white,
           leading: Container(
             decoration: const BoxDecoration(
@@ -44,15 +44,15 @@ class _RecoveryPageState extends State<RecoveryPage> {
             ),
           ),
         ),
-        body: Stack(
+  body: Stack(
           children: <Widget>[
             // Background image
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/images/Bar_pic.jpeg'),
+                  image: AssetImage('assets/images/BlankBackgroundImage.jpg'),
                   fit: BoxFit.cover,
-                  alignment: Alignment.center,
+                  alignment: Alignment.centerRight,
                 ),
               ),
             ),
@@ -63,41 +63,100 @@ class _RecoveryPageState extends State<RecoveryPage> {
                 children: <Widget>[
                   SizedBox(
                       height: MediaQuery.of(context).padding.top +
-                          kToolbarHeight), // Match app bar height
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Card(
-                        elevation: 8.0,
-                        child: RecoveryForm(),
+                          kToolbarHeight),
+ Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 20.0),
+                    child: Container(
+                      margin: EdgeInsets.only(top: 20.0),
+                      padding: EdgeInsets.all(40.0),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.9),
+                        border: Border.all(color: Color(0xFFA0522D), width: 2.0),
+                        borderRadius: BorderRadius.circular(12.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            spreadRadius: 0,
+                            blurRadius: 20,
+                            offset: Offset(0, 10),
+                          ),
+                        ],
                       ),
+                      width: MediaQuery.of(context).size.width * 0.8,
+                      child: RecoveryForm(),
                     ),
-                  )
+                  ),
+                ),
                 ],
               ),
             ),
           ],
         ),
-        endDrawer: const NavigationMenu(),
+
+        endDrawer: NavigationMenu(),
+
       ),
     );
   }
 }
 
 class RecoveryForm extends StatefulWidget {
-  const RecoveryForm({super.key});
-
   @override
   _RecoveryFormState createState() => _RecoveryFormState();
 }
 
 class _RecoveryFormState extends State<RecoveryForm> {
-  @override
-  Widget build(BuildContext context) {
-    return _buildRecoverAccountForm();
-  }
+    final TextEditingController emailController = TextEditingController();
+    String feedbackMessage = '';
 
-  Widget _buildRecoverAccountForm() {
+    @override
+    Widget build(BuildContext context) {
+      return _buildRecoveryForm();
+    }
+    Future<void> recovery() async {
+
+      var url = Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/recoverAccount');
+
+      try {
+        var response = await http.post(
+          url,
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: jsonEncode(
+            {
+              'Email': emailController.text.trim()
+            },
+          ),
+        );
+
+        if (response.statusCode == 200) {
+          setState(
+            () {
+              feedbackMessage = "Recovery Email has been sent!";
+            }
+          );
+        } 
+        else {
+          var data = jsonDecode(response.body);
+          setState(
+            () {
+              feedbackMessage = data['error'];
+            },
+          );
+        }
+      } catch (e) {
+        setState(
+          () {
+            feedbackMessage = 'Failed to connect to the server';
+            print('Error during recovery: $e');
+          },
+        );
+      }
+    }
+
+  Widget _buildRecoveryForm() {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -106,18 +165,18 @@ class _RecoveryFormState extends State<RecoveryForm> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.arrow_back,
-                  color: Colors.blue,
+                  color: Color(0xFFA0522D),
                 ),
                 iconSize: 30,
                 onPressed: () {
                   Navigator.pushNamed(context, '/login');
-                },
+                }
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Text(
                 'Recover Account',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -125,58 +184,36 @@ class _RecoveryFormState extends State<RecoveryForm> {
             ),
           ],
         ),
-        // Add your recover account form fields and logic here
-        const Padding(
-          padding: EdgeInsets.all(8.0),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
           child: TextField(
-            decoration: InputDecoration(labelText: 'Username'),
+            controller: emailController,
+            decoration: InputDecoration(labelText: 'Email'),
           ),
         ),
-        const SizedBox(height: 16.0),
-        const Padding(
-          padding: EdgeInsets.all(8.0),
-          child: TextField(
-            decoration: InputDecoration(labelText: 'Recovery Code'),
+        const SizedBox(height: 10.0),
+        Text(
+          feedbackMessage,
+          style: const TextStyle(
+            color: Colors.red,
           ),
         ),
-        const SizedBox(height: 16.0),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: TextButton(
-                onPressed: () {
-                  // sendRecoveryCode
-                },
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.blue,
-                ),
-                child: const Text(
-                  'Send recovery code',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
+        SizedBox(height: 16.0),
+        ElevatedButton(
+          onPressed: () {
+            recovery();
+          },
+          style: ElevatedButton.styleFrom(
+            padding: EdgeInsets.all(12.0),
+            backgroundColor: Color(0xFFA0522D), 
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8.0),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: ElevatedButton(
-                onPressed: () {
-                  // recoverAccount
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xffa0522d),
-                  foregroundColor: Colors.white,
-                ),
-                child: const Text(
-                  'Next',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                ),
-              ),
-            ),
-          ],
+          ),
+          child: Text('Submit',
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
         ),
-        const SizedBox(height: 16.0),
       ],
     );
   }

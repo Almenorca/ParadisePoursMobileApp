@@ -4,7 +4,7 @@ import 'package:paradise_pours_app/auth_service.dart';
 import 'dart:convert';
 
 import '../navigation_menu.dart';
-import '../components/display_beer.dart';
+import '../components/display_drink.dart';
 
 class BeerPage extends StatelessWidget {
   const BeerPage({super.key});
@@ -29,7 +29,7 @@ class BeerPage extends StatelessWidget {
           leading: Container(
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              image: DecorationImage(
+              image: DecorationImage( 
                   fit: BoxFit.fill,
                   image: AssetImage('assets/images/Paradise_Pours_Logo.png')),
             ),
@@ -102,8 +102,11 @@ class _BeerListState extends State<BeerList> {
   bool validSearch = true;
   String filterSelection = '';
   List<dynamic> filteredBeers = [];
+
   int? _userId; //User Id. Used for favorite and rating
   bool favBoolean = false; //Used as a checker if user liked a beer. Will be used to passed down for favorite.
+  double avgRating = 0; //Avg Ratings of drink
+  List<Map<String, dynamic>> comments = []; //Comments of drink
 
   @override //Similar to useEffect()
   void initState() {
@@ -145,6 +148,8 @@ class _BeerListState extends State<BeerList> {
     });
     
     checkFav(selectedBeer);
+    getRatings(selectedBeer);
+    getComments(selectedBeer);
 
     showDialog(
       context: context,
@@ -153,8 +158,10 @@ class _BeerListState extends State<BeerList> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(4.0),
           ),
-          //Passes clicked beer and User Id to facts/rating menu. If favBoolean is true, passes unFavBeer() to allow user unfavorite.
-          child: DisplayBeer(beer: selectedBeer, userId: _userId, favBoolean: favBoolean, favBeer: favBeer, unfavBeer: unfavBeer),
+          //Passes variables and functions to the popup menu.
+          child: DisplayDrink(drink: selectedBeer, userId: _userId, favBoolean: favBoolean, 
+          favDrink: favBeer, unfavDrink: unfavBeer, 
+          rateDrink: rateBeer, avgRating: avgRating, comments: comments),
         );
       },
     );
@@ -208,6 +215,67 @@ class _BeerListState extends State<BeerList> {
     } 
     catch (error) {
       print('Error favoriting: $error');
+    } 
+  }
+
+  //Rates Beer
+    void rateBeer(rating, comment) async {
+      try {
+      var response = await http.post(Uri.parse('http://localhost:5000/api/rateBeer'),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(),
+                            '_id': selectedBeer['_id'],
+                            'Stars': rating,
+                            'Comment': comment,}));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = true;
+        });
+        fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
+        print('Successfully favorited. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error favoriting: $error');
+    } 
+  }
+
+  //Gets average rating for Beer.
+  void getRatings(selectedBeer) async{
+      try {
+      var uri = Uri.parse('http://localhost:5000/api/beerRatings').replace(queryParameters: {'_id': selectedBeer['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+
+        setState(() {
+          avgRating = data['avgRating'];
+        });
+        
+        print('Successfully retrieved average ratings. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error gettings ratings: $error');
+    } 
+  }
+  //Gets comments for Beer.
+    void getComments(selectedBeer) async{
+      try {
+      var uri = Uri.parse('http://localhost:5000/api/getBeerComments').replace(queryParameters: {'_id': selectedBeer['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+
+        setState(() {
+          comments = List<Map<String, dynamic>>.from(data['comments']);
+        });
+        
+        print('Successfully retrieved average ratings. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error gettings ratings: $error');
     } 
   }
 
@@ -355,4 +423,3 @@ class _BeerListState extends State<BeerList> {
     );
   }
 }
-

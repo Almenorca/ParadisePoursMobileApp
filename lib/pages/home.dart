@@ -17,13 +17,14 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       key: _scaffoldKey,
       extendBody: true,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text(
-          'Paradise Pours',
+          'Paradise Pours' ,
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,

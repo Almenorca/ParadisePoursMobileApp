@@ -110,7 +110,7 @@ class _BeerListState extends State<BeerList> {
 
   Future<void> fetchAllBeers() async {
     try {
-      var response = await http.get(Uri.parse(buildPath('api/getAllBeers')));
+      var response = await http.get(Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/getAllBeers'));
       List<dynamic> beersData = json.decode(response.body)['beers'];
       beersData.sort((a, b) => a['Name'].compareTo(b['Name']));
       setState(() {
@@ -124,18 +124,28 @@ class _BeerListState extends State<BeerList> {
   void handleBeerClick(dynamic beer) {
     setState(() {
       selectedBeer = beer;
-      showDisplayBeer = true;
     });
+
+    //Creates a pop-up that will show the nutrition facts, favorite, ratings, etc. on click
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: DisplayBeer(beer: selectedBeer),
+        );
+      },
+    );
   }
 
+
   void handleSearch() async {
-    searchTextController.text = 'Search';
-
     try {
-      var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
+      var response = await http.post(Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/searchBeer'),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'Name': searchTextController.text}));
-
+          body: json.encode({'Name': searchTextController.text.trim()}));
       setState(() {
         validSearch = true;
         searchResults = json.decode(response.body)['beer'];
@@ -203,6 +213,7 @@ class _BeerListState extends State<BeerList> {
             ],
           ),
         ),
+        //Dropdown Menu
         Container(
           padding: const EdgeInsets.all(10),
           child: DropdownButton<String>(
@@ -228,6 +239,7 @@ class _BeerListState extends State<BeerList> {
             }).toList(),
           ),
         ),
+        //Beer List
         Container(
           padding: const EdgeInsets.all(10),
           child: validSearch
@@ -245,6 +257,7 @@ class _BeerListState extends State<BeerList> {
                             );
                           },
                         ))
+                  //Search Bar
                   : ListView.builder(
                       shrinkWrap: true,
                       itemCount: searchResults.length,
@@ -267,17 +280,6 @@ class _BeerListState extends State<BeerList> {
                   ],
                 ),
         ),
-        if (validSearch && showDisplayBeer && selectedBeer != null)
-          DisplayBeer(beer: selectedBeer), // Display the selected beer
-        // ElevatedButton(
-        //   onPressed: widget.switchComponents,
-        //   child: Row(
-        //     children: <Widget>[
-        //       Icon(Icons.arrow_left),
-        //       Text('Back'),
-        //     ],
-        //   ),
-        // ),
       ],
     );
   }

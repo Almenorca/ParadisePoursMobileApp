@@ -10,7 +10,7 @@ class NutritionFacts extends StatelessWidget {
     required this.drinkToDisplay,
   });
 
-   @override
+  @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
@@ -18,7 +18,7 @@ class NutritionFacts extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min, 
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+          children: [ 
             //Name of drink
             Center(
               child: Text(
@@ -36,18 +36,9 @@ class NutritionFacts extends StatelessWidget {
             const SizedBox(height: 16),
             _buildFavoriteButton(),
             const SizedBox(height: 16),
-            Center(
-              child: ElevatedButton(
-                onPressed: () => switchComp(),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Rate Beer'),
-                    const Icon(Icons.arrow_forward),
-                  ],
-                ),
-              ),
-            ),
+            _buildRateButton(),
+            const SizedBox(height: 16),
+            _buildBackButton(context),
           ],
         ),
       ),
@@ -55,30 +46,60 @@ class NutritionFacts extends StatelessWidget {
   }
 
   Widget _buildNutritionItem(String header, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Row(
-        children: [
-          Text(
-            '$header ',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-          ),
-          Expanded(
-            child: Text(value),
-          ),
-        ],
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Text(
+              header,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            ),
+            SizedBox(height: 4.0), // Adjust the height value as needed
+            Text(value),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildFavoriteButton() {
+      return Container(
+        alignment: Alignment.center,
+        child: ElevatedButton(
+          onPressed: () {
+          },
+          child: Text('Favorite'),
+        ),
+      );
+    }
+  }
+
+  Widget _buildRateButton() {
     return Container(
-      alignment: Alignment.centerLeft,
+      alignment: Alignment.center,
       child: ElevatedButton(
         onPressed: () {
+          
         },
-        child: Text('Favorite'),
+        child: Text('Rate'),
       ),
     );
   }
-}
+
+  Widget _buildBackButton(context) {
+    return Container(
+      alignment: Alignment.center,
+      child: ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Color(0xFFA0522D), 
+        foregroundColor: Colors.white,
+      ),
+      onPressed: () {
+        Navigator.of(context).pop();
+      },
+        child: Text('Back'),
+      ),
+    );
+  }

@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
-import 'nutrition_facts.dart';
+import 'beer_facts.dart';
 import 'ratings.dart';
 
 class DisplayBeer extends StatefulWidget {
-  final dynamic beer;
+  final dynamic beer; //Selected beer
+  final dynamic userId;
+  final dynamic favBoolean;
+  final Function favBeer;
+  final Function unfavBeer;
 
-  const DisplayBeer({super.key, required this.beer});
+  const DisplayBeer(
+    {super.key, 
+    required this.beer,
+    required this.userId,
+    required this.favBoolean,
+    required this.favBeer,
+    required this.unfavBeer,
+    });
 
   @override
   _DisplayBeerState createState() => _DisplayBeerState();
@@ -33,9 +44,13 @@ class _DisplayBeerState extends State<DisplayBeer> {
   Widget build(BuildContext context) {
     // Determine which component to display based on showRatings state
     Widget compToDisplay = showRatings
-        ? Ratings(switchComp: switchComp, drinkToDisplay: widget.beer)
-        : NutritionFacts(switchComp: switchComp, drinkToDisplay: widget.beer);
-
+        ? Ratings(switchComp: switchComp, drinkToDisplay: widget.beer) //switchComp function, beer, userId, favBoolean passed
+        : BeerFacts(switchComp: switchComp, 
+                        drinkToDisplay: widget.beer, 
+                        userId: widget.userId, 
+                        favBoolean: widget.favBoolean,
+                        favBeer: widget.favBeer,
+                        unfavBeer: widget.unfavBeer);
     return Container(
       child: compToDisplay,
     );

@@ -5,6 +5,7 @@ class Ratings extends StatefulWidget {
   final dynamic drinkToDisplay;
   final Function(int, String) rateDrink; 
   final List<Map<String, dynamic>> comments;
+  final dynamic userRating; //Implement later
 
   const Ratings({
     super.key,
@@ -12,6 +13,7 @@ class Ratings extends StatefulWidget {
     required this.drinkToDisplay,
     required this.rateDrink,
     required this.comments,
+    required this.userRating,
   });
 
   @override
@@ -21,8 +23,45 @@ class Ratings extends StatefulWidget {
 class _RatingsState extends State<Ratings> {
   int _rating = 0; // Initial rating if user never rated the drink.
   final TextEditingController commentController = TextEditingController();
-  String feedbackMessage = '';
+  PageController _pageController = PageController();
 
+  @override
+  void dispose() {
+    _pageController.dispose(); // Dispose of the PageController when not needed
+    super.dispose();
+  }
+
+  void _handleSubmit() {
+    widget.rateDrink(_rating, commentController.text);
+
+    //Tells user they successfully submitted and takes them back to beer list.
+    //Tbh the reason this exists because I was struggling to refresh avgRating and comments after submission. 
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Cheers!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Image.asset('assets/images/beer-mugs-right.png'),
+              SizedBox(height: 16),
+              Text('Rating and comment submitted successfully!'),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); //Closes alert
+                Navigator.of(context).pop(); //Exists back to drink list
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -30,14 +69,102 @@ class _RatingsState extends State<Ratings> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Name of drink
-            Center(
-              child: Text(
-                widget.drinkToDisplay['Name'],
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 34),
-                textAlign: TextAlign.center,
+            // Comment navigation
+            Container(
+              height: 250, 
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Stack(
+                children: [
+                  // Comment navigation
+                  PageView.builder(
+                    controller: _pageController,
+                    itemCount: widget.comments.length,
+                    itemBuilder: (context, index) {
+                      final rating = widget.comments[index]['Rating'];
+                      return Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            // Display rating as stars
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: List.generate(5, (starIndex) {
+                                return Icon(
+                                  starIndex < rating ? Icons.star : Icons.star_border,
+                                  color: Colors.amber,
+                                  size: 32.0,
+                                );
+                              }),
+                            ),
+                            SizedBox(height: 12),
+                            // Display comment
+                            Text(
+                              widget.comments[index]['Comment'] ?? 'No comment',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    onPageChanged: (index) {
+                    },
+                  ),
+                  // Navigation arrows
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: IconButton(
+                        iconSize: 48.0, 
+                        icon: Icon(Icons.arrow_left),
+                        color: Colors.black.withOpacity(0),
+                        onPressed: () {
+                          _pageController.previousPage(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: IconButton(
+                        iconSize: 48.0, 
+                        icon: Icon(Icons.arrow_right),
+                        color: Colors.black.withOpacity(0),
+                        onPressed: () {
+                          _pageController.nextPage(
+                            duration: Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 16),
@@ -72,7 +199,7 @@ class _RatingsState extends State<Ratings> {
             ),
             const SizedBox(height: 16),
             // Submit button
-            _buildSubmitButton(),
+            _buildSubmitButton(context),
             const SizedBox(height: 16),
             // Back button
             _buildBackButton(context),
@@ -82,17 +209,13 @@ class _RatingsState extends State<Ratings> {
     );
   }
 
-    void _handleSubmit() {
-    widget.rateDrink(_rating, commentController.text);
-    setState(() {
-      feedbackMessage = 'Rating and comment submitted successfully!';
-    });
-  }
-    Widget _buildSubmitButton() {
+  Widget _buildSubmitButton(BuildContext context) {
     return Container(
       alignment: Alignment.center,
       child: ElevatedButton(
-        onPressed: _handleSubmit,
+        onPressed: () {
+          _handleSubmit();
+        },
         child: const Text('Submit Rating'),
       ),
     );

@@ -11,6 +11,7 @@ class DisplayDrink extends StatefulWidget {
   final Function favDrink;
   final Function unfavDrink;  
   //Comment Features
+  final int userRating;
   final Function(int, String) rateDrink; 
   final List<Map<String, dynamic>> comments;
 
@@ -22,6 +23,7 @@ class DisplayDrink extends StatefulWidget {
     required this.avgRating,
     required this.favDrink,
     required this.unfavDrink,
+    required this.userRating,
     required this.rateDrink,
     required this.comments,
     });
@@ -54,6 +56,7 @@ class _DisplayDrinkState extends State<DisplayDrink> {
     Widget compToDisplay = showRatings
         ? Ratings(switchComp: switchComp, 
                   drinkToDisplay: widget.drink,
+                  userRating: widget.userRating,
                   rateDrink: widget.rateDrink, 
                   comments: widget.comments) 
         : DrinkFacts(switchComp: switchComp, 

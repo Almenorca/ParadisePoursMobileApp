@@ -105,6 +105,7 @@ class _BeerListState extends State<BeerList> {
 
   int? _userId; //User Id. Used for favorite and rating
   bool favBoolean = false; //Used as a checker if user liked a beer. Will be used to passed down for favorite.
+  int userRating = 0; //User rating
   double avgRating = 0; //Avg Ratings of drink
   List<Map<String, dynamic>> comments = []; //Comments of drink
 
@@ -148,7 +149,8 @@ void handleBeerClick(dynamic beer) async {
 
   await Future.wait([
     checkFav(selectedBeer),
-    getRatings(selectedBeer),
+    getRating(selectedBeer),
+    getAvgRatings(selectedBeer),
     getComments(selectedBeer)
   ]);
 
@@ -167,6 +169,7 @@ void handleBeerClick(dynamic beer) async {
           avgRating: avgRating,
           favDrink: favBeer,
           unfavDrink: unfavBeer,
+          userRating: userRating,
           rateDrink: rateBeer,
           comments: comments,
         ),
@@ -185,7 +188,27 @@ Future<void> checkFav(dynamic selectedBeer) async {
   print("new boolean = $favBoolean");
 }
 
-Future<void> getRatings(dynamic selectedBeer) async {
+//Get User's rating
+Future<void> getRating(dynamic selectedBeer) async {
+  try {
+    var uri = Uri.parse('http://localhost:5000/api/userRating').
+    replace(queryParameters: {'UserId': _userId, 
+                              '_id': selectedBeer['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        userRating = data['userRating'];
+      });
+      print('Successfully retrieved user rating. userRating: $userRating');
+    }
+  } catch (error) {
+    print('Error getting ratings: $error');
+  }
+}
+
+//Get Avg ratings
+Future<void> getAvgRatings(dynamic selectedBeer) async {
   try {
     var uri = Uri.parse('http://localhost:5000/api/beerRatings').replace(queryParameters: {'_id': selectedBeer['_id']});
     var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
@@ -201,6 +224,7 @@ Future<void> getRatings(dynamic selectedBeer) async {
   }
 }
 
+//Get users comments
 Future<void> getComments(dynamic selectedBeer) async {
   try {
     var uri = Uri.parse('http://localhost:5000/api/getBeerComments').replace(queryParameters: {'_id': selectedBeer['_id']});
@@ -267,11 +291,11 @@ Future<void> getComments(dynamic selectedBeer) async {
                             'Comment': comment,}));
       if (response.statusCode == 200) {
         fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
-        print('Successfully favorited. favBoolean: $favBoolean');
+        print('Successfully rated and commented');
       }
     } 
     catch (error) {
-      print('Error favoriting: $error');
+      print('Error commenting: $error');
     } 
   }
 

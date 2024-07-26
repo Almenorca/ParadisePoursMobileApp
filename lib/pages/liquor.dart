@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:paradise_pours_app/auth_service.dart';
 import 'dart:convert';
 
 import '../navigation_menu.dart';
-// import '../components/display_liquor.dart';
+import '../components/display_drink.dart';
 
 class LiquorPage extends StatelessWidget {
   const LiquorPage({super.key});
@@ -40,8 +41,7 @@ class LiquorPage extends StatelessWidget {
             Container(
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image:
-                      AssetImage('assets/images/LiquorBackground2Enhanced.jpg'),
+                  image: AssetImage('assets/images/LiquorBackground2Enhanced.jpg'),
                   fit: BoxFit.cover,
                   alignment: Alignment.centerLeft,
                 ),
@@ -99,12 +99,31 @@ class _LiquorPageState extends State<LiquorList> {
   String filterSelection = '';
   List<dynamic> filteredLiquors = [];
 
+  int? _userId; //User Id. Used for favorite and rating
+  bool favBoolean = false; //Used as a checker if user liked a liquor. Will be used to passed down for favorite.
+  int userRating = 0; //User rating
+  double avgRating = 0; //Avg Ratings of drink
+  List<Map<String, dynamic>> comments = []; //Comments of drink
+
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     fetchAllLiquors();
   }
 
+  //Initializes user id.
+  Future<void> _loadUserData() async {
+    final authService = AuthService();
+    final user = await authService.getUser();
+    if (user != null) {
+      setState(() {
+        _userId = user.userId;
+      });
+    }
+  }
+
+  //Fetches all liquor upon entering page.
   Future<void> fetchAllLiquors() async {
     try {
       var response = await http.get(Uri.parse(buildPath('api/getAllLiquors')));
@@ -118,16 +137,165 @@ class _LiquorPageState extends State<LiquorList> {
     }
   }
 
-  void handleLiquorClick(dynamic liquor) {
+  void handleLiquorClick(dynamic liquor) async{
     setState(() {
       selectedLiquor = liquor;
-      showDisplayLiquor = true;
     });
+
+    await Future.wait([
+      checkFav(selectedLiquor),
+      getRating(selectedLiquor),
+      getAvgRatings(selectedLiquor),
+      getComments(selectedLiquor)
+    ]);
+
+    // Show dialog after all async operations are complete
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          child: DisplayDrink(
+            drink: selectedLiquor,
+            userId: _userId,
+            favBoolean: favBoolean,
+            avgRating: avgRating,
+            favDrink: favLiquor,
+            unfavDrink: unfavLiquor,
+            userRating: userRating,
+            rateDrink: rateLiquor,
+            comments: comments,
+          ),
+        );
+      },
+    );
   }
 
-  void handleSearch() async {
-    // searchTextController.text = 'Search';
+Future<void> checkFav(dynamic selectedLiquor) async {
+  print("original boolean = $favBoolean");
+  List<dynamic> favorites = selectedLiquor['Favorites'];
+  print("$selectedLiquor['Favorites']");
+  setState(() {
+    favBoolean = (favorites.contains(_userId.toString()));
+  });
+  print("new boolean = $favBoolean");
+}
 
+//Get User's rating
+Future<void> getRating(dynamic selectedLiquor) async {
+  try {
+    var uri = Uri.parse(buildPath('api/userRating')).
+    replace(queryParameters: {'UserId': _userId, 
+                              '_id': selectedLiquor['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        userRating = data['userRating'];
+      });
+      print('Successfully retrieved user rating. userRating: $userRating');
+    }
+  } catch (error) {
+    print('Error getting ratings: $error');
+  }
+}
+
+//Get Avg ratings
+Future<void> getAvgRatings(dynamic selectedLiquor) async {
+  try {
+    var uri = Uri.parse(buildPath('api/liquorRatings')).replace(queryParameters: {'_id': selectedLiquor['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        avgRating = data['avgRating'];
+      });
+      print('Successfully retrieved average ratings. avgRating: $avgRating');
+    }
+  } catch (error) {
+    print('Error getting ratings: $error');
+  }
+}
+
+//Get users comments
+Future<void> getComments(dynamic selectedLiquor) async {
+  try {
+    var uri = Uri.parse(buildPath('api/getLiquorComments')).replace(queryParameters: {'_id': selectedLiquor['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        comments = List<Map<String, dynamic>>.from(data['comments']);
+      });
+      print('Successfully retrieved comments. comments: $comments');
+    }
+  } catch (error) {
+    print('Error getting comments: $error');
+  }
+}
+  //Unfavorites Liquor
+  void unfavLiquor() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/unfavoriteLiquor')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+                              '_id': selectedLiquor['_id']}));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = false;
+        });
+        fetchAllLiquors(); //Call function to refresh liquor list to show that Favorites has been edited.
+      print('Successfully unfavorited. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error unfavoriting: $error');
+    }
+  }
+
+  //Favorites Liquor
+  void favLiquor() async {
+      try {
+      var response = await http.post(Uri.parse(buildPath('api/favoriteLiquor')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(),
+                            '_id': selectedLiquor['_id']}));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = true;
+        });
+        fetchAllLiquors(); //Call function to refresh liquor list to show that Favorites has been edited.
+        print('Successfully favorited. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error favoriting: $error');
+    } 
+  }
+
+  //Rates Liquor
+    void rateLiquor(rating, comment) async {
+      try {
+      var response = await http.post(Uri.parse(buildPath('api/rateLiquor')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(),
+                            '_id': selectedLiquor['_id'],
+                            'Stars': rating,
+                            'Comment': comment,}));
+      if (response.statusCode == 200) {
+        fetchAllLiquors(); //Call function to refresh liquor list to show that Favorites has been edited.
+        print('Successfully rated and commented');
+      }
+    } 
+    catch (error) {
+      print('Error commenting: $error');
+    } 
+  }
+
+  //Searches liquor via searchbar.
+  void handleSearch() async {
     try {
       var response = await http.post(Uri.parse(buildPath('api/searchLiquor')),
           headers: {'Content-Type': 'application/json'},
@@ -199,6 +367,7 @@ class _LiquorPageState extends State<LiquorList> {
             ],
           ),
         ),
+        //Dropdown Menu
         Container(
           padding: const EdgeInsets.all(10),
           child: DropdownButton<String>(
@@ -221,6 +390,7 @@ class _LiquorPageState extends State<LiquorList> {
             }).toList(),
           ),
         ),
+        //Liquor List
         Container(
           padding: const EdgeInsets.all(10),
           child: validSearch
@@ -238,6 +408,7 @@ class _LiquorPageState extends State<LiquorList> {
                             );
                           },
                         ))
+                  //Search Bar
                   : ListView.builder(
                       shrinkWrap: true,
                       itemCount: searchResults.length,
@@ -260,17 +431,6 @@ class _LiquorPageState extends State<LiquorList> {
                   ],
                 ),
         ),
-        // if (validSearch && showDisplayLiquor && selectedLiquor != null)
-        //   // DisplayLiquor(liquor: selectedLiquor), // Display the selected Liquor
-        // // ElevatedButton(
-        // //   onPressed: widget.switchComponents,
-        // //   child: Row(
-        // //     children: <Widget>[
-        // //       Icon(Icons.arrow_left),
-        // //       Text('Back'),
-        // //     ],
-        // //   ),
-        // // ),
       ],
     );
   }

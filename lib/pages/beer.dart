@@ -112,7 +112,6 @@ class _BeerListState extends State<BeerList> {
     fetchAllBeers();
   }
 
-
   //Initializes user id.
   Future<void> _loadUserData() async {
     final authService = AuthService();
@@ -138,41 +137,41 @@ class _BeerListState extends State<BeerList> {
     }
   }
 
-void handleBeerClick(dynamic beer) async {
-  setState(() {
-    selectedBeer = beer;
-  });
+  void handleBeerClick(dynamic beer) async {
+    setState(() {
+      selectedBeer = beer;
+    });
 
-  await Future.wait([
-    checkFav(selectedBeer),
-    getRating(selectedBeer),
-    getAvgRatings(selectedBeer),
-    getComments(selectedBeer)
-  ]);
+    await Future.wait([
+      checkFav(selectedBeer),
+      getRating(selectedBeer),
+      getAvgRatings(selectedBeer),
+      getComments(selectedBeer)
+    ]);
 
-  // Show dialog after all async operations are complete
-  showDialog(
-    context: context,
-    builder: (BuildContext context) {
-      return Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(4.0),
-        ),
-        child: DisplayDrink(
-          drink: selectedBeer,
-          userId: _userId,
-          favBoolean: favBoolean,
-          avgRating: avgRating,
-          favDrink: favBeer,
-          unfavDrink: unfavBeer,
-          userRating: userRating,
-          rateDrink: rateBeer,
-          comments: comments,
-        ),
-      );
-    },
-  );
-}
+    // Show dialog after all async operations are complete
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          child: DisplayDrink(
+            drink: selectedBeer,
+            userId: _userId,
+            favBoolean: favBoolean,
+            avgRating: avgRating,
+            favDrink: favBeer,
+            unfavDrink: unfavBeer,
+            userRating: userRating,
+            rateDrink: rateBeer,
+            comments: comments,
+          ),
+        );
+      },
+    );
+  }
 
 Future<void> checkFav(dynamic selectedBeer) async {
   print("original boolean = $favBoolean");

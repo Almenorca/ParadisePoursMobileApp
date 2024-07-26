@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:paradise_pours_app/auth_service.dart';
 import 'dart:convert';
 
 import '../navigation_menu.dart';
-// import '../components/display_wine.dart';
+import '../components/display_drink.dart';
 
 class WinePage extends StatelessWidget {
   const WinePage({super.key});
@@ -98,12 +99,31 @@ class _WinePageState extends State<WineList> {
   String filterSelection = '';
   List<dynamic> filteredWines = [];
 
+  int? _userId; //User Id. Used for favorite and rating
+  bool favBoolean = false; //Used as a checker if user liked a beer. Will be used to passed down for favorite.
+  int userRating = 0; //User rating
+  double avgRating = 0; //Avg Ratings of drink
+  List<Map<String, dynamic>> comments = []; //Comments of drink
+
   @override
   void initState() {
     super.initState();
+    _loadUserData();
     fetchAllWines();
   }
 
+  //Initializes user id.
+  Future<void> _loadUserData() async {
+    final authService = AuthService();
+    final user = await authService.getUser();
+    if (user != null) {
+      setState(() {
+        _userId = user.userId;
+      });
+    }
+  }
+
+  //Fetches all wine upon entering page.
   Future<void> fetchAllWines() async {
     try {
       var response = await http.get(Uri.parse(buildPath('api/getAllWines')));
@@ -117,16 +137,165 @@ class _WinePageState extends State<WineList> {
     }
   }
 
-  void handleWineClick(dynamic wine) {
+  void handleWineClick(dynamic wine) async{
     setState(() {
       selectedWine = wine;
-      showDisplayWine = true;
     });
+
+    await Future.wait([
+      checkFav(selectedWine),
+      getRating(selectedWine),
+      getAvgRatings(selectedWine),
+      getComments(selectedWine)
+    ]);
+
+    // Show dialog after all async operations are complete
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(4.0),
+          ),
+          child: DisplayDrink(
+            drink: selectedWine,
+            userId: _userId,
+            favBoolean: favBoolean,
+            avgRating: avgRating,
+            favDrink: favWine,
+            unfavDrink: unfavWine,
+            userRating: userRating,
+            rateDrink: rateWine,
+            comments: comments,
+          ),
+        );
+      },
+    );
   }
 
-  void handleSearch() async {
-    // searchTextController.text = 'Search';
+  Future<void> checkFav(dynamic selectedBeer) async {
+  print("original boolean = $favBoolean");
+  List<dynamic> favorites = selectedWine['Favorites'];
+  print("$selectedWine['Favorites']");
+  setState(() {
+    favBoolean = (favorites.contains(_userId.toString()));
+  });
+  print("new boolean = $favBoolean");
+}
 
+//Get User's rating
+Future<void> getRating(dynamic selectedWine) async {
+  try {
+    var uri = Uri.parse(buildPath('api/userRating')).
+    replace(queryParameters: {'UserId': _userId, 
+                              '_id': selectedWine['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        userRating = data['userRating'];
+      });
+      print('Successfully retrieved user rating. userRating: $userRating');
+    }
+  } catch (error) {
+    print('Error getting ratings: $error');
+  }
+}
+
+//Get Avg ratings
+Future<void> getAvgRatings(dynamic selectedWine) async {
+  try {
+    var uri = Uri.parse(buildPath('api/wineRatings')).replace(queryParameters: {'_id': selectedWine['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        avgRating = data['avgRating'];
+      });
+      print('Successfully retrieved average ratings. avgRating: $avgRating');
+    }
+  } catch (error) {
+    print('Error getting ratings: $error');
+  }
+}
+
+//Get users comments
+Future<void> getComments(dynamic selectedWine) async {
+  try {
+    var uri = Uri.parse(buildPath('api/getWineComments')).replace(queryParameters: {'_id': selectedWine['_id']});
+    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        comments = List<Map<String, dynamic>>.from(data['comments']);
+      });
+      print('Successfully retrieved comments. comments: $comments');
+    }
+  } catch (error) {
+    print('Error getting comments: $error');
+  }
+}
+  //Unfavorites Wine
+  void unfavWine() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/unfavoriteWine')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+                              '_id': selectedWine['_id']}));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = false;
+        });
+        fetchAllWines(); //Call function to refresh wine list to show that Favorites has been edited.
+      print('Successfully unfavorited. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error unfavoriting: $error');
+    }
+  }
+
+  //Favorites Wine
+  void favWine() async {
+      try {
+      var response = await http.post(Uri.parse(buildPath('api/favoriteWine')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(),
+                            '_id': selectedWine['_id']}));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = true;
+        });
+        fetchAllWines(); //Call function to refresh wine list to show that Favorites has been edited.
+        print('Successfully favorited. favBoolean: $favBoolean');
+      }
+    } 
+    catch (error) {
+      print('Error favoriting: $error');
+    } 
+  }
+
+  //Rates Wine
+    void rateWine(rating, comment) async {
+      try {
+      var response = await http.post(Uri.parse(buildPath('api/rateWine')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'UserId': _userId.toString(),
+                            '_id': selectedWine['_id'],
+                            'Stars': rating,
+                            'Comment': comment,}));
+      if (response.statusCode == 200) {
+        fetchAllWines(); //Call function to refresh wine list to show that Favorites has been edited.
+        print('Successfully rated and commented');
+      }
+    } 
+    catch (error) {
+      print('Error commenting: $error');
+    } 
+  }
+
+  //Searches wine via searchbar.
+  void handleSearch() async {
     try {
       var response = await http.post(Uri.parse(buildPath('api/searchWine')),
           headers: {'Content-Type': 'application/json'},
@@ -256,17 +425,6 @@ class _WinePageState extends State<WineList> {
                   ],
                 ),
         ),
-        // if (validSearch && showDisplayWine && selectedWine != null)
-        //   DisplayWine(wine: selectedWine), // Display the selected wine
-        // // ElevatedButton(
-        // //   onPressed: widget.switchComponents,
-        // //   child: Row(
-        // //     children: <Widget>[
-        // //       Icon(Icons.arrow_left),
-        // //       Text('Back'),
-        // //     ],
-        // //   ),
-        // // ),
       ],
     );
   }

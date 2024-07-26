@@ -125,13 +125,12 @@ class _WinePageState extends State<WineList> {
   }
 
   void handleSearch() async {
-    searchTextController.text = 'Search';
+    // searchTextController.text = 'Search';
 
     try {
       var response = await http.post(Uri.parse(buildPath('api/searchWine')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'Name': searchTextController.text}));
-
+          body: json.encode({'Name': searchTextController.text.trim()}));
       setState(() {
         validSearch = true;
         searchResults = json.decode(response.body)['wine'];

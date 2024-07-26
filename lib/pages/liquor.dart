@@ -322,9 +322,45 @@ Future<void> getComments(dynamic selectedLiquor) async {
     });
   }
 
+  void applyFilter() {
+    List<dynamic> filteredLiquors = [];
+    if (filterSelection == 'Favorites' && _userId != null) {
+      filteredLiquors = liquors.where((liquor) => liquor['Favorites']?.contains(_userId.toString()) ?? false).toList();
+    } else if (filterSelection == 'Whiskey and Scotch') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Whiskey' || liquor['Style'] == 'Scotch').toList();
+    } else if (filterSelection == 'Vodka') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Vodka').toList();
+    }  else if (filterSelection == 'Rum') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Rum').toList();
+    } else if (filterSelection == 'Gin') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Gin').toList();
+    } else if (filterSelection == 'Tequila') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Tequila').toList();
+    } else if (filterSelection == 'Brandy and Cognac') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Brandy' || liquor['Style'] == 'Cognac').toList();
+    } else {
+      filteredLiquors = liquors;
+    }
+    setState(() {
+      validSearch = true;
+      searchResults = filteredLiquors;
+      showDisplayLiquor = false;
+    });
+  }
+
   void handleFilterChange(String? selection) {
     setState(() {
       filterSelection = selection ?? ''; // handle null case if needed
+    });
+    applyFilter();
+  }
+
+  void handleClearFilter() {
+    setState(() {
+      filterSelection = '';
+      searchResults = [];
+      validSearch = true;
+      showDisplayLiquor = false;
     });
   }
 

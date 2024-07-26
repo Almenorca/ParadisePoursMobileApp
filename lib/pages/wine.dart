@@ -174,67 +174,68 @@ class _WinePageState extends State<WineList> {
   }
 
   Future<void> checkFav(dynamic selectedBeer) async {
-  print("original boolean = $favBoolean");
-  List<dynamic> favorites = selectedWine['Favorites'];
-  print("$selectedWine['Favorites']");
-  setState(() {
-    favBoolean = (favorites.contains(_userId.toString()));
-  });
-  print("new boolean = $favBoolean");
-}
-
-//Get User's rating
-Future<void> getRating(dynamic selectedWine) async {
-  try {
-    var uri = Uri.parse(buildPath('api/userRating')).
-    replace(queryParameters: {'UserId': _userId, 
-                              '_id': selectedWine['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      setState(() {
-        userRating = data['userRating'];
-      });
-      print('Successfully retrieved user rating. userRating: $userRating');
-    }
-  } catch (error) {
-    print('Error getting ratings: $error');
+    print("original boolean = $favBoolean");
+    List<dynamic> favorites = selectedWine['Favorites'];
+    print("$selectedWine['Favorites']");
+    setState(() {
+      favBoolean = (favorites.contains(_userId.toString()));
+    });
+    print("new boolean = $favBoolean");
   }
-}
 
-//Get Avg ratings
-Future<void> getAvgRatings(dynamic selectedWine) async {
-  try {
-    var uri = Uri.parse(buildPath('api/wineRatings')).replace(queryParameters: {'_id': selectedWine['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      setState(() {
-        avgRating = data['avgRating'];
-      });
-      print('Successfully retrieved average ratings. avgRating: $avgRating');
+  //Get User's rating
+  Future<void> getRating(dynamic selectedWine) async {
+    try {
+      var uri = Uri.parse(buildPath('api/userRating')).
+      replace(queryParameters: {'UserId': _userId, 
+                                '_id': selectedWine['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          userRating = data['userRating'];
+        });
+        print('Successfully retrieved user rating. userRating: $userRating');
+      }
+    } catch (error) {
+      print('Error getting ratings: $error');
     }
-  } catch (error) {
-    print('Error getting ratings: $error');
   }
-}
 
-//Get users comments
-Future<void> getComments(dynamic selectedWine) async {
-  try {
-    var uri = Uri.parse(buildPath('api/getWineComments')).replace(queryParameters: {'_id': selectedWine['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      setState(() {
-        comments = List<Map<String, dynamic>>.from(data['comments']);
-      });
-      print('Successfully retrieved comments. comments: $comments');
+  //Get Avg ratings
+  Future<void> getAvgRatings(dynamic selectedWine) async {
+    try {
+      var uri = Uri.parse(buildPath('api/wineRatings')).replace(queryParameters: {'_id': selectedWine['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          avgRating = data['avgRating'];
+        });
+        print('Successfully retrieved average ratings. avgRating: $avgRating');
+      }
+    } catch (error) {
+      print('Error getting ratings: $error');
     }
-  } catch (error) {
-    print('Error getting comments: $error');
   }
-}
+
+  //Get users comments
+  Future<void> getComments(dynamic selectedWine) async {
+    try {
+      var uri = Uri.parse(buildPath('api/getWineComments')).replace(queryParameters: {'_id': selectedWine['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          comments = List<Map<String, dynamic>>.from(data['comments']);
+        });
+        print('Successfully retrieved comments. comments: $comments');
+      }
+    } catch (error) {
+      print('Error getting comments: $error');
+    }
+  }
+
   //Unfavorites Wine
   void unfavWine() async {
     try {
@@ -322,9 +323,43 @@ Future<void> getComments(dynamic selectedWine) async {
     });
   }
 
+  void applyFilter() {
+    List<dynamic> filteredWines = [];
+    if (filterSelection == 'Favorites' && _userId != null) {
+      filteredWines = wines.where((wine) => wine['Favorites']?.contains(_userId.toString()) ?? false).toList();
+    } else if (filterSelection == 'Red') {
+      filteredWines = wines.where((wine) => wine['Style'] == 'Red').toList();
+    } else if (filterSelection == 'White') {
+      filteredWines = wines.where((wine) => wine['Style'] == 'White').toList();
+    } else if (filterSelection == 'Sparkling') {
+      filteredWines = wines.where((wine) => wine['Style'] == 'Sparkling').toList();
+    } else if (filterSelection == 'Calories < 125') {
+      filteredWines = wines.where((wine) => wine['Calories'] < 125).toList();
+    } else if (filterSelection == 'USA Origin') {
+      filteredWines = wines.where((wine) => wine['Origin'] == 'USA').toList();
+    } else {
+      filteredWines = wines;
+    }
+    setState(() {
+      validSearch = true;
+      searchResults = filteredWines;
+      showDisplayWine = false;
+    });
+  }
+
   void handleFilterChange(String? selection) {
     setState(() {
       filterSelection = selection ?? ''; // handle null case if needed
+    });
+    applyFilter();
+  }
+
+  void handleClearFilter() {
+    setState(() {
+      filterSelection = '';
+      searchResults = [];
+      validSearch = true;
+      showDisplayWine = false;
     });
   }
 
@@ -376,8 +411,8 @@ Future<void> getComments(dynamic selectedWine) async {
               'Red',
               'White',
               'Sparkling',
-              'Calories',
-              'Origin',
+              'Calories < 125',
+              'USA Origin',
             ].map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,

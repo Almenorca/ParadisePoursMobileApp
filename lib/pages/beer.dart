@@ -322,9 +322,49 @@ Future<void> getComments(dynamic selectedBeer) async {
     });
   }
 
+  void applyFilter() {
+    List<dynamic> filteredBeers = [];
+    if (filterSelection == 'Favorites' && _userId != null) {
+      filteredBeers = beers.where((beer) => beer['Favorites']?.contains(_userId.toString()) ?? false).toList();
+    } else if (filterSelection == 'IPAs') {
+      filteredBeers = beers.where((beer) => beer['Style'] == 'IPA' && beer['ABV'] >= 5.0).toList();
+    } else if (filterSelection == 'Pilsner') {
+      filteredBeers = beers.where((beer) => beer['Style'] == 'Pilsner').toList();
+    } else if (filterSelection == 'Lager') {
+      filteredBeers = beers.where((beer) => RegExp(r'Lager', caseSensitive: false).hasMatch(beer['Style'])).toList();
+    } else if (filterSelection == 'Wheat') {
+      filteredBeers = beers.where((beer) => RegExp(r'Wheat', caseSensitive: false).hasMatch(beer['Style'])).toList();
+    } else if (filterSelection == 'Porter') {
+      filteredBeers = beers.where((beer) => beer['Style'] == 'Porter').toList();
+    } else if (filterSelection == 'Stout') {
+      filteredBeers = beers.where((beer) => beer['Style'] == 'Stout').toList();
+    } else if (filterSelection == 'Calories < 125') {
+      filteredBeers = beers.where((beer) => beer['Calories'] < 125).toList();
+    } else if (filterSelection == 'USA Origin') {
+      filteredBeers = beers.where((beer) => beer['Origin'] == 'USA').toList();
+    } else {
+      filteredBeers = beers;
+    }
+    setState(() {
+      validSearch = true;
+      searchResults = filteredBeers;
+      showDisplayBeer = false;
+    });
+  }
+
   void handleFilterChange(String? selection) {
     setState(() {
       filterSelection = selection ?? ''; // handle null case if needed
+    });
+    applyFilter();
+  }
+
+  void handleClearFilter() {
+    setState(() {
+      filterSelection = '';
+      searchResults = [];
+      validSearch = true;
+      showDisplayBeer = false;
     });
   }
 
@@ -382,9 +422,8 @@ Future<void> getComments(dynamic selectedBeer) async {
               'Wheat',
               'Porter',
               'Stout',
-              'Lager',
-              'Calories',
-              'Origin',
+              'Calories < 125',
+              'USA Origin',
             ].map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,

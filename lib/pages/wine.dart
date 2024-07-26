@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../navigation_menu.dart';
-import '../components/display_wine.dart';
+// import '../components/display_wine.dart';
 
 class WinePage extends StatelessWidget {
   const WinePage({super.key});
@@ -85,11 +85,7 @@ class WineList extends StatefulWidget {
 class _WinePageState extends State<WineList> {
   final String app_name = 'paradise-pours-4be127640468';
   String buildPath(String route) {
-    if (const bool.fromEnvironment('dart.vm.product')) {
       return 'https://$app_name.herokuapp.com/$route';
-    } else {
-      return 'http://localhost:5000/$route';
-    }
   }
 
   // UserContext userContext;
@@ -261,17 +257,17 @@ class _WinePageState extends State<WineList> {
                   ],
                 ),
         ),
-        if (validSearch && showDisplayWine && selectedWine != null)
-          DisplayWine(wine: selectedWine), // Display the selected wine
-        // ElevatedButton(
-        //   onPressed: widget.switchComponents,
-        //   child: Row(
-        //     children: <Widget>[
-        //       Icon(Icons.arrow_left),
-        //       Text('Back'),
-        //     ],
-        //   ),
-        // ),
+        // if (validSearch && showDisplayWine && selectedWine != null)
+        //   DisplayWine(wine: selectedWine), // Display the selected wine
+        // // ElevatedButton(
+        // //   onPressed: widget.switchComponents,
+        // //   child: Row(
+        // //     children: <Widget>[
+        // //       Icon(Icons.arrow_left),
+        // //       Text('Back'),
+        // //     ],
+        // //   ),
+        // // ),
       ],
     );
   }

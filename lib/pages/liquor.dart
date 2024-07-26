@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import '../navigation_menu.dart';
-import '../components/display_liquor.dart';
+// import '../components/display_liquor.dart';
 
 class LiquorPage extends StatelessWidget {
   const LiquorPage({super.key});
@@ -86,11 +86,7 @@ class LiquorList extends StatefulWidget {
 class _LiquorPageState extends State<LiquorList> {
   final String app_name = 'paradise-pours-4be127640468';
   String buildPath(String route) {
-    if (const bool.fromEnvironment('dart.vm.product')) {
       return 'https://$app_name.herokuapp.com/$route';
-    } else {
-      return 'http://localhost:5000/$route';
-    }
   }
 
   // UserContext userContext;
@@ -265,17 +261,17 @@ class _LiquorPageState extends State<LiquorList> {
                   ],
                 ),
         ),
-        if (validSearch && showDisplayLiquor && selectedLiquor != null)
-          DisplayLiquor(liquor: selectedLiquor), // Display the selected Liquor
-        // ElevatedButton(
-        //   onPressed: widget.switchComponents,
-        //   child: Row(
-        //     children: <Widget>[
-        //       Icon(Icons.arrow_left),
-        //       Text('Back'),
-        //     ],
-        //   ),
-        // ),
+        // if (validSearch && showDisplayLiquor && selectedLiquor != null)
+        //   // DisplayLiquor(liquor: selectedLiquor), // Display the selected Liquor
+        // // ElevatedButton(
+        // //   onPressed: widget.switchComponents,
+        // //   child: Row(
+        // //     children: <Widget>[
+        // //       Icon(Icons.arrow_left),
+        // //       Text('Back'),
+        // //     ],
+        // //   ),
+        // // ),
       ],
     );
   }

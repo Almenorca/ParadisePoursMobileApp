@@ -86,11 +86,7 @@ class BeerList extends StatefulWidget {
 class _BeerListState extends State<BeerList> {
   final String app_name = 'paradise-pours-4be127640468';
   String buildPath(String route) {
-    if (const bool.fromEnvironment('dart.vm.product')) {
       return 'https://$app_name.herokuapp.com/$route';
-    } else {
-      return 'http://localhost:5000/$route';
-    }
   }
 
   // UserContext userContext;
@@ -131,7 +127,7 @@ class _BeerListState extends State<BeerList> {
   //Fetches all beer upon entering page.
   Future<void> fetchAllBeers() async {
     try {
-      var response = await http.get(Uri.parse('http://localhost:5000/api/getAllBeers'));
+      var response = await http.get(Uri.parse(buildPath('api/getAllBeers')));
       List<dynamic> beersData = json.decode(response.body)['beers'];
       beersData.sort((a, b) => a['Name'].compareTo(b['Name']));
       setState(() {
@@ -191,7 +187,7 @@ Future<void> checkFav(dynamic selectedBeer) async {
 //Get User's rating
 Future<void> getRating(dynamic selectedBeer) async {
   try {
-    var uri = Uri.parse('http://localhost:5000/api/userRating').
+    var uri = Uri.parse(buildPath('api/userRating')).
     replace(queryParameters: {'UserId': _userId, 
                               '_id': selectedBeer['_id']});
     var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
@@ -210,7 +206,7 @@ Future<void> getRating(dynamic selectedBeer) async {
 //Get Avg ratings
 Future<void> getAvgRatings(dynamic selectedBeer) async {
   try {
-    var uri = Uri.parse('http://localhost:5000/api/beerRatings').replace(queryParameters: {'_id': selectedBeer['_id']});
+    var uri = Uri.parse(buildPath('api/beerRatings')).replace(queryParameters: {'_id': selectedBeer['_id']});
     var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
@@ -227,7 +223,7 @@ Future<void> getAvgRatings(dynamic selectedBeer) async {
 //Get users comments
 Future<void> getComments(dynamic selectedBeer) async {
   try {
-    var uri = Uri.parse('http://localhost:5000/api/getBeerComments').replace(queryParameters: {'_id': selectedBeer['_id']});
+    var uri = Uri.parse(buildPath('api/getBeerComments')).replace(queryParameters: {'_id': selectedBeer['_id']});
     var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
@@ -243,7 +239,7 @@ Future<void> getComments(dynamic selectedBeer) async {
   //Unfavorites Beer
   void unfavBeer() async {
     try {
-      var response = await http.post(Uri.parse('http://localhost:5000/api/unfavoriteBeer'),
+      var response = await http.post(Uri.parse(buildPath('api/unfavoriteBeer')),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
                               '_id': selectedBeer['_id']}));
@@ -263,7 +259,7 @@ Future<void> getComments(dynamic selectedBeer) async {
   //Favorites Beer
   void favBeer() async {
       try {
-      var response = await http.post(Uri.parse('http://localhost:5000/api/favoriteBeer'),
+      var response = await http.post(Uri.parse(buildPath('api/favoriteBeer')),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'UserId': _userId.toString(),
                             '_id': selectedBeer['_id']}));
@@ -283,7 +279,7 @@ Future<void> getComments(dynamic selectedBeer) async {
   //Rates Beer
     void rateBeer(rating, comment) async {
       try {
-      var response = await http.post(Uri.parse('http://localhost:5000/api/rateBeer'),
+      var response = await http.post(Uri.parse(buildPath('api/rateBeer')),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'UserId': _userId.toString(),
                             '_id': selectedBeer['_id'],
@@ -302,7 +298,7 @@ Future<void> getComments(dynamic selectedBeer) async {
   //Searches beer via searchbar.
   void handleSearch() async {
     try {
-      var response = await http.post(Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/searchBeer'),
+      var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
           headers: {'Content-Type': 'application/json'},
           body: json.encode({'Name': searchTextController.text.trim()}));
       setState(() {

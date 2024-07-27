@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../auth_service.dart';
-import '../navigation_menu.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -20,8 +19,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // var userProvider = Provider.of<UserProvider>(context);
-
     return GestureDetector(
       onTap: () {
         FocusScope.of(context).unfocus();
@@ -75,13 +72,39 @@ class _LoginPageState extends State<LoginPage> {
                         child: LoginForm(),
                       ),
                     ),
-                  )
+                  ),
+                  // About Us Button
+                  Padding(
+                    padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+                    child: Center(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/about');
+                        },
+                        icon: Icon(Icons.info, color: Colors.white),
+                        label: Text(
+                          'About Us',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.all(12.0),
+                          backgroundColor: Color(0xFFA0522D),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8.0),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
         ),
-        endDrawer: const NavigationMenu(),
       ),
     );
   }
@@ -103,7 +126,7 @@ class _LoginFormState extends State<LoginForm> {
 
   bool validateForm() {
     return usernameController.text.isNotEmpty &&
-         passwordController.text.isNotEmpty;
+        passwordController.text.isNotEmpty;
   }
 
   void togglePasswordVisibility() {
@@ -113,14 +136,13 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   Future<void> login() async {
-    var url = Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/login');
+    var url = Uri.parse(
+        'http://paradise-pours-4be127640468.herokuapp.com/api/login');
 
-    if(!validateForm()){
-        setState(
-          () {
-            feedbackMessage = "All fields must be filled";
-          },
-        );
+    if (!validateForm()) {
+      setState(() {
+        feedbackMessage = "All fields must be filled";
+      });
       return;
     }
 
@@ -144,22 +166,17 @@ class _LoginFormState extends State<LoginForm> {
         User user = User.fromJson(data['user']); // Save user data.
         AuthService().saveUser(user);
         await Navigator.pushNamed(context, '/home');
-      } 
-      else {
+      } else {
         var data = jsonDecode(response.body);
-        setState(
-          () {
-            feedbackMessage = data['error'];
-          },
-        );
+        setState(() {
+          feedbackMessage = data['error'];
+        });
       }
     } catch (e) {
-      setState(
-        () {
-          feedbackMessage = 'Failed to connect to the server';
-          print('Error during login: $e');
-        },
-      );
+      setState(() {
+        feedbackMessage = 'Failed to connect to the server';
+        print('Error during login: $e');
+      });
     }
   }
 
@@ -167,7 +184,6 @@ class _LoginFormState extends State<LoginForm> {
   Widget build(BuildContext context) {
     return _buildLoginForm();
   }
-
 
   //Returns login form
   Widget _buildLoginForm() {
@@ -194,16 +210,16 @@ class _LoginFormState extends State<LoginForm> {
           child: TextField(
             obscureText: hidePassword,
             controller: passwordController,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    hidePassword ? Icons.visibility : Icons.visibility_off,
-                    color: Colors.grey,
-                  ),
-                  onPressed: togglePasswordVisibility, // Toggle button pressed
+            decoration: InputDecoration(
+              labelText: 'Password',
+              suffixIcon: IconButton(
+                icon: Icon(
+                  hidePassword ? Icons.visibility : Icons.visibility_off,
+                  color: Colors.grey,
                 ),
+                onPressed: togglePasswordVisibility, // Toggle button pressed
               ),
+            ),
           ),
         ),
         SizedBox(height: 10.0),
@@ -222,15 +238,17 @@ class _LoginFormState extends State<LoginForm> {
               child: ElevatedButton(
                 onPressed: login,
                 style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.all(12.0),
-                    backgroundColor: Color(0xFFA0522D), 
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
+                  padding: EdgeInsets.all(12.0),
+                  backgroundColor: Color(0xFFA0522D),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
                 ),
-                child: Text('Login',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                child: Text(
+                  'Login',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                ),
               ),
             ),
             SizedBox(height: 8.0),
@@ -240,42 +258,45 @@ class _LoginFormState extends State<LoginForm> {
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
-                    onPressed: (){
-                      Navigator.pushNamed(context,'/register');
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/register');
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.all(12.0),
-                      backgroundColor: Color(0xFFA0522D), 
+                      backgroundColor: Color(0xFFA0522D),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                     ),
-                    child: Text('Create Account',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
+                    child: Text(
+                      'Create Account',
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                    ),
                   ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          //Forget Account Link
-          Padding(
-            padding: const EdgeInsets.only(top: 20.0),
-            child: GestureDetector(
-              onTap: () {
-                  Navigator.pushNamed(context,'/recovery');
-              },
-              child: Text(
-                'Forgot Account',
-                style: TextStyle(
-                  color: Color(0xFFA0522D),
-                  decoration: TextDecoration.underline,
                 ),
+              ],
+            ),
+          ],
+        ),
+        //Forget Account Link
+        Padding(
+          padding: const EdgeInsets.only(bottom: 10.0),
+          child: GestureDetector(
+            onTap: () {
+              Navigator.pushNamed(context, '/recovery');
+            },
+            child: Text(
+              'Forgot Account',
+              style: TextStyle(
+                color: Color(0xFFA0522D),
+                decoration: TextDecoration.underline,
               ),
             ),
           ),
+        ),
       ],
-      );
-    }
+    );
+  }
 }

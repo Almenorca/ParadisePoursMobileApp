@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(seconds: 3), // Increased duration to 3 seconds
+      duration: const Duration(seconds: 2), 
       vsync: this,
     );
     _opacity = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -99,7 +99,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     padding: EdgeInsets.all(16.0),
                     child: Card(
                       elevation: 8.0,
-                      // child: LoginForm(),
                     ),
                   ),
                 ),
@@ -190,7 +189,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 32), // Add some space between sections
+                        const SizedBox(height: 32), 
                         SlideTransition(
                           position: _slideIn,
                           child: FadeTransition(

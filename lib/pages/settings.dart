@@ -74,14 +74,37 @@ class _SettingsPageState extends State<SettingsPage> {
       final user = await AuthService().getUser();
       if (user != null) {
         setState(() {
-          _usernameController.text = user.username;
           _emailController.text = user.email;
-          // Fetch the password
-          _fetchPassword(user.username);
+          // Fetch the username
+          _fetchUsername(user.userId).then((_) {
+            // Fetch the password after the username is updated
+            _fetchPassword(_usernameController.text);
+          });
         });
       }
     } catch (e) {
       print('Error fetching user data: $e');
+    }
+  }
+
+  Future<void> _fetchUsername(int userId) async {
+    try {
+      final response = await http.post(
+        Uri.parse(buildPath('api/getUsername')),
+        body: jsonEncode({'userId': userId}),
+        headers: {"Content-Type": "application/json"},
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _usernameController.text = data['Username'];
+        });
+      } else {
+        print('Failed to fetch username: ${response.statusCode} ${response.body}');
+      }
+    } catch (e) {
+      print('Error fetching username: $e');
     }
   }
 
@@ -99,7 +122,7 @@ class _SettingsPageState extends State<SettingsPage> {
           _passwordController.text = data['Password'];
         });
       } else {
-        print('Failed to fetch password');
+        print('Failed to fetch password: ${response.statusCode} ${response.body}');
       }
     } catch (e) {
       print('Error fetching password: $e');
@@ -285,7 +308,7 @@ class _SettingsPageState extends State<SettingsPage> {
               onPressed: () {
                 Navigator.of(context).pop();
                 if (reload) {
-                  _fetchUserData(); // Reload the user data
+                  _fetchUserData();
                 }
               },
               child: const Text('OK'),
@@ -305,7 +328,6 @@ class _SettingsPageState extends State<SettingsPage> {
       _showPasswordCriteria = false;
       _showConfirmPasswordCriteria = false;
       feedbackMessage = '';
-      _fetchPassword(_usernameController.text); // Re-fetch the password
     });
   }
 

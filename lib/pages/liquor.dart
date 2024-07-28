@@ -102,6 +102,7 @@ class _LiquorPageState extends State<LiquorList> {
   int? _userId; //User Id. Used for favorite and rating
   bool favBoolean = false; //Used as a checker if user liked a liquor. Will be used to passed down for favorite.
   int userRating = 0; //User rating
+  int index = 0;
   double avgRating = 0; //Avg Ratings of drink
   List<Map<String, dynamic>> comments = []; //Comments of drink
 
@@ -167,6 +168,7 @@ class _LiquorPageState extends State<LiquorList> {
             userRating: userRating,
             rateDrink: rateLiquor,
             comments: comments,
+            index: index,
           ),
         );
       },
@@ -193,12 +195,23 @@ Future<void> getRating(dynamic selectedLiquor) async {
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
       setState(() {
-        userRating = data['userRating'];
+        userRating = data['userRating'] as int;
+        index = data['index'] as int;
       });
       print('Successfully retrieved user rating. userRating: $userRating');
+    } else {
+      setState(() {
+        userRating = 0;
+        index = 0;
+      });
+      print('User rating does not exist: ${response.statusCode}');
     }
   } catch (error) {
-    print('Error getting ratings: $error');
+      setState(() {
+        userRating = 0;
+        index = 0;
+      });
+    print('User rating does not exist: $error');
   }
 }
 

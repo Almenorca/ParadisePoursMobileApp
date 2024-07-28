@@ -102,6 +102,7 @@ class _WinePageState extends State<WineList> {
   int? _userId; //User Id. Used for favorite and rating
   bool favBoolean = false; //Used as a checker if user liked a beer. Will be used to passed down for favorite.
   int userRating = 0; //User rating
+  int index = 0;
   double avgRating = 0; //Avg Ratings of drink
   List<Map<String, dynamic>> comments = []; //Comments of drink
 
@@ -167,6 +168,7 @@ class _WinePageState extends State<WineList> {
             userRating: userRating,
             rateDrink: rateWine,
             comments: comments,
+            index: index,
           ),
         );
       },
@@ -190,16 +192,27 @@ class _WinePageState extends State<WineList> {
       replace(queryParameters: {'UserId': _userId, 
                                 '_id': selectedWine['_id']});
       var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        setState(() {
-          userRating = data['userRating'];
-        });
-        print('Successfully retrieved user rating. userRating: $userRating');
-      }
-    } catch (error) {
-      print('Error getting ratings: $error');
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+      setState(() {
+        userRating = data['userRating'] as int;
+        index = data['index'] as int;
+      });
+      print('Successfully retrieved user rating. userRating: $userRating');
+    } else {
+      setState(() {
+        userRating = 0;
+        index = 0;
+      });
+      print('User rating does not exist: ${response.statusCode}');
     }
+  } catch (error) {
+      setState(() {
+        userRating = 0;
+        index = 0;
+      });
+    print('User rating does not exist: $error');
+  }
   }
 
   //Get Avg ratings

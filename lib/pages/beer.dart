@@ -102,6 +102,7 @@ class _BeerListState extends State<BeerList> {
   int? _userId; //User Id. Used for favorite and rating
   bool favBoolean = false; //Used as a checker if user liked a beer. Will be used to passed down for favorite.
   int userRating = 0; //User rating
+  int index = 0;
   double avgRating = 0; //Avg Ratings of drink
   List<Map<String, dynamic>> comments = []; //Comments of drink
 
@@ -167,6 +168,7 @@ class _BeerListState extends State<BeerList> {
             userRating: userRating,
             rateDrink: rateBeer,
             comments: comments,
+            index: index,
           ),
         );
       },
@@ -186,19 +188,30 @@ Future<void> checkFav(dynamic selectedBeer) async {
 //Get User's rating
 Future<void> getRating(dynamic selectedBeer) async {
   try {
-    var uri = Uri.parse(buildPath('api/userRating')).
-    replace(queryParameters: {'UserId': _userId, 
+    var uri = Uri.parse(buildPath('api/userBeerRating')).
+    replace(queryParameters: {'UserId': _userId.toString(), 
                               '_id': selectedBeer['_id']});
     var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
       setState(() {
-        userRating = data['userRating'];
+        userRating = data['userRating'] as int;
+        index = data['index'] as int;
       });
       print('Successfully retrieved user rating. userRating: $userRating');
+    } else {
+      setState(() {
+        userRating = 0;
+        index = 0;
+      });
+      print('User rating does not exist: ${response.statusCode}');
     }
   } catch (error) {
-    print('Error getting ratings: $error');
+      setState(() {
+        userRating = 0;
+        index = 0;
+      });
+    print('User rating does not exist: $error');
   }
 }
 
@@ -276,23 +289,23 @@ Future<void> getComments(dynamic selectedBeer) async {
   }
 
   //Rates Beer
-    void rateBeer(rating, comment) async {
-      try {
-      var response = await http.post(Uri.parse(buildPath('api/rateBeer')),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(),
-                            '_id': selectedBeer['_id'],
-                            'Stars': rating,
-                            'Comment': comment,}));
-      if (response.statusCode == 200) {
-        fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
-        print('Successfully rated and commented');
-      }
-    } 
-    catch (error) {
-      print('Error commenting: $error');
-    } 
-  }
+  void rateBeer(rating, comment) async {
+    try {
+    var response = await http.post(Uri.parse(buildPath('api/rateBeer')),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({'UserId': _userId.toString(),
+                          '_id': selectedBeer['_id'],
+                          'Stars': rating,
+                          'Comment': comment,}));
+    if (response.statusCode == 200) {
+      fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
+      print('Successfully rated and commented');
+    }
+  } 
+  catch (error) {
+    print('Error commenting: $error');
+  } 
+}
 
   //Searches beer via searchbar.
   void handleSearch() async {

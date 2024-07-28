@@ -42,6 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String feedbackMessage = '';
 
   bool _showConfirmPassword = false;
+  String _oldUsername = '';
 
   void _openDrawer() {
     _scaffoldKey.currentState?.openEndDrawer();
@@ -99,6 +100,7 @@ class _SettingsPageState extends State<SettingsPage> {
         final data = jsonDecode(response.body);
         setState(() {
           _usernameController.text = data['Username'];
+          _oldUsername = data['Username']; // Store the old username
         });
       } else {
         print('Failed to fetch username: ${response.statusCode} ${response.body}');
@@ -170,6 +172,7 @@ class _SettingsPageState extends State<SettingsPage> {
       // Successfully changed username
       setState(() {
         _isUsernameEditable = false;
+        _oldUsername = _usernameController.text; // Update old username
       });
       _showAlert('Success', 'Username changed successfully', true);
     } else {
@@ -331,6 +334,13 @@ class _SettingsPageState extends State<SettingsPage> {
     });
   }
 
+  void _cancelUsernameEdit() {
+    setState(() {
+      _isUsernameEditable = false;
+      _usernameController.text = _oldUsername; // Revert to the old username
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -393,11 +403,17 @@ class _SettingsPageState extends State<SettingsPage> {
                             setState(() {
                               if (_isUsernameEditable) {
                                 _changeUsername();
+                              } else {
+                                _isUsernameEditable = true;
                               }
-                              _isUsernameEditable = !_isUsernameEditable;
                             });
                           },
                         ),
+                        if (_isUsernameEditable)
+                          IconButton(
+                            icon: const Icon(Icons.cancel),
+                            onPressed: _cancelUsernameEdit,
+                          ),
                       ],
                     ),
                     const SizedBox(height: 16),

@@ -1,13 +1,29 @@
+// ignore_for_file: non_constant_identifier_names, avoid_print, use_build_context_synchronously, library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:paradise_pours_app/auth_service.dart';
+import 'package:paradise_pours_app/components/display_dotd.dart';
 import 'dart:convert';
 
 import '../navigation_menu.dart';
 import '../components/display_drink.dart';
 
-class BeerPage extends StatelessWidget {
+class BeerPage extends StatefulWidget {
   const BeerPage({super.key});
+
+  @override
+  _BeerPageState createState() => _BeerPageState();
+}
+
+class _BeerPageState extends State<BeerPage> {
+  bool showBeerList = false;
+
+  void toggleBeerList() {
+    setState(() {
+      showBeerList = !showBeerList;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +45,7 @@ class BeerPage extends StatelessWidget {
           leading: Container(
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              image: DecorationImage( 
+              image: DecorationImage(
                   fit: BoxFit.fill,
                   image: AssetImage('assets/images/Paradise_Pours_Logo.png')),
             ),
@@ -57,11 +73,13 @@ class BeerPage extends StatelessWidget {
                           kToolbarHeight), // Match app bar height
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Card(
                         color: Colors.white.withAlpha(210),
                         elevation: 8.0,
-                        child: BeerList(), // Use BeerList widget here
+                        child: showBeerList
+                            ? BeerList(onBack: toggleBeerList) // Use BeerList widget here
+                            : BeerOfTheDay(onExploreFullList: toggleBeerList),
                       ),
                     ),
                   ),
@@ -77,7 +95,8 @@ class BeerPage extends StatelessWidget {
 }
 
 class BeerList extends StatefulWidget {
-  const BeerList({super.key});
+  final VoidCallback onBack;
+  const BeerList({required this.onBack, super.key});
 
   @override
   _BeerListState createState() => _BeerListState();
@@ -86,10 +105,9 @@ class BeerList extends StatefulWidget {
 class _BeerListState extends State<BeerList> {
   final String app_name = 'paradise-pours-4be127640468';
   String buildPath(String route) {
-      return 'https://$app_name.herokuapp.com/$route';
+    return 'https://$app_name.herokuapp.com/$route';
   }
 
-  // UserContext userContext;
   List<dynamic> beers = [];
   dynamic selectedBeer;
   bool showDisplayBeer = false;
@@ -123,7 +141,7 @@ class _BeerListState extends State<BeerList> {
       });
     }
   }
-  
+
   //Fetches all beer upon entering page.
   Future<void> fetchAllBeers() async {
     try {
@@ -138,7 +156,7 @@ class _BeerListState extends State<BeerList> {
     }
   }
 
-  void handleBeerClick(dynamic beer) async {
+  Future<void> loadBOTD(dynamic beer) async {
     setState(() {
       selectedBeer = beer;
     });
@@ -175,137 +193,143 @@ class _BeerListState extends State<BeerList> {
     );
   }
 
-Future<void> checkFav(dynamic selectedBeer) async {
-  print("original boolean = $favBoolean");
-  List<dynamic> favorites = selectedBeer['Favorites'];
-  print("$selectedBeer['Favorites']");
-  setState(() {
-    favBoolean = (favorites.contains(_userId.toString()));
-  });
-  print("new boolean = $favBoolean");
-}
+  Future<void> checkFav(dynamic selectedBeer) async {
+    print("original boolean = $favBoolean");
+    List<dynamic> favorites = selectedBeer['Favorites'];
+    print("$selectedBeer['Favorites']");
+    setState(() {
+      favBoolean = (favorites.contains(_userId.toString()));
+    });
+    print("new boolean = $favBoolean");
+  }
 
-//Get User's rating
-Future<void> getRating(dynamic selectedBeer) async {
-  try {
-    var uri = Uri.parse(buildPath('api/userBeerRating')).
-    replace(queryParameters: {'UserId': _userId.toString(), 
-                              '_id': selectedBeer['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      setState(() {
-        userRating = data['userRating'] as int;
-        index = data['index'] as int;
-      });
-      print('Successfully retrieved user rating. userRating: $userRating');
-    } else {
+  //Get User's rating
+  Future<void> getRating(dynamic selectedBeer) async {
+    try {
+      var uri = Uri.parse(buildPath('api/userBeerRating')).replace(
+          queryParameters: {
+            'UserId': _userId.toString(),
+            '_id': selectedBeer['_id']
+          });
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          userRating = data['userRating'] as int;
+          index = data['index'] as int;
+        });
+        print('Successfully retrieved user rating. userRating: $userRating');
+      } else {
+        setState(() {
+          userRating = 0;
+          index = 0;
+        });
+        print('User rating does not exist: ${response.statusCode}');
+      }
+    } catch (error) {
       setState(() {
         userRating = 0;
         index = 0;
       });
-      print('User rating does not exist: ${response.statusCode}');
+      print('User rating does not exist: $error');
     }
-  } catch (error) {
-      setState(() {
-        userRating = 0;
-        index = 0;
-      });
-    print('User rating does not exist: $error');
   }
-}
 
-//Get Avg ratings
-Future<void> getAvgRatings(dynamic selectedBeer) async {
-  try {
-    var uri = Uri.parse(buildPath('api/beerRatings')).replace(queryParameters: {'_id': selectedBeer['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      setState(() {
-        avgRating = data['avgRating'];
-      });
-      print('Successfully retrieved average ratings. avgRating: $avgRating');
+  //Get Avg ratings
+  Future<void> getAvgRatings(dynamic selectedBeer) async {
+    try {
+      var uri = Uri.parse(buildPath('api/beerRatings')).replace(queryParameters: {'_id': selectedBeer['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          avgRating = data['avgRating'];
+        });
+        print('Successfully retrieved average ratings. avgRating: $avgRating');
+      }
+    } catch (error) {
+      print('Error getting ratings: $error');
     }
-  } catch (error) {
-    print('Error getting ratings: $error');
   }
-}
 
-//Get users comments
-Future<void> getComments(dynamic selectedBeer) async {
-  try {
-    var uri = Uri.parse(buildPath('api/getBeerComments')).replace(queryParameters: {'_id': selectedBeer['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      setState(() {
-        comments = List<Map<String, dynamic>>.from(data['comments']);
-      });
-      print('Successfully retrieved comments. comments: $comments');
+  //Get users comments
+  Future<void> getComments(dynamic selectedBeer) async {
+    try {
+      var uri = Uri.parse(buildPath('api/getBeerComments')).replace(queryParameters: {'_id': selectedBeer['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          comments = List<Map<String, dynamic>>.from(data['comments']);
+        });
+        print('Successfully retrieved comments. comments: $comments');
+      }
+    } catch (error) {
+      print('Error getting comments: $error');
     }
-  } catch (error) {
-    print('Error getting comments: $error');
   }
-}
+
   //Unfavorites Beer
   void unfavBeer() async {
     try {
       var response = await http.post(Uri.parse(buildPath('api/unfavoriteBeer')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
-                              '_id': selectedBeer['_id']}));
+          body: json.encode({
+            'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+            '_id': selectedBeer['_id']
+          }));
       if (response.statusCode == 200) {
         setState(() {
           favBoolean = false;
         });
-        fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
-      print('Successfully unfavorited. favBoolean: $favBoolean');
+        fetchAllBeers(); 
+        print('Successfully unfavorited. favBoolean: $favBoolean');
       }
-    } 
-    catch (error) {
+    } catch (error) {
       print('Error unfavoriting: $error');
     }
   }
 
   //Favorites Beer
   void favBeer() async {
-      try {
+    try {
       var response = await http.post(Uri.parse(buildPath('api/favoriteBeer')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(),
-                            '_id': selectedBeer['_id']}));
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedBeer['_id']
+          }));
       if (response.statusCode == 200) {
         setState(() {
           favBoolean = true;
         });
-        fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
+        fetchAllBeers(); 
         print('Successfully favorited. favBoolean: $favBoolean');
       }
-    } 
-    catch (error) {
+    } catch (error) {
       print('Error favoriting: $error');
-    } 
+    }
   }
 
   //Rates Beer
   void rateBeer(rating, comment) async {
     try {
-    var response = await http.post(Uri.parse(buildPath('api/rateBeer')),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({'UserId': _userId.toString(),
-                          '_id': selectedBeer['_id'],
-                          'Stars': rating,
-                          'Comment': comment,}));
-    if (response.statusCode == 200) {
-      fetchAllBeers(); //Call function to refresh beer list to show that Favorites has been edited.
-      print('Successfully rated and commented');
+      var response = await http.post(Uri.parse(buildPath('api/rateBeer')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedBeer['_id'],
+            'Stars': rating,
+            'Comment': comment,
+          }));
+      if (response.statusCode == 200) {
+        fetchAllBeers(); 
+        print('Successfully rated and commented');
+      }
+    } catch (error) {
+      print('Error commenting: $error');
     }
-  } 
-  catch (error) {
-    print('Error commenting: $error');
-  } 
-}
+  }
 
   //Searches beer via searchbar.
   void handleSearch() async {
@@ -388,14 +412,21 @@ Future<void> getComments(dynamic selectedBeer) async {
       children: <Widget>[
         Container(
           padding: const EdgeInsets.all(10),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // Image.asset('assets/images/beer-mugs-left.png'),
-              Text('Beer List', style: TextStyle(fontSize: 24)),
-              // Image.asset('assets/images/beer-mugs-right.png'),
-            ],
-          ),
+          child: Stack(
+          children: <Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack, 
+              ),
+            ),
+            const Align(
+              alignment: Alignment.center,
+              child: Text('Beer List', style: TextStyle(fontSize: 24)),
+            ),
+          ],
+        ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -420,7 +451,7 @@ Future<void> getComments(dynamic selectedBeer) async {
             ],
           ),
         ),
-        //Dropdown Menu
+        //Filter Menu
         Container(
           padding: const EdgeInsets.all(10),
           child: DropdownButton<String>(
@@ -459,7 +490,7 @@ Future<void> getComments(dynamic selectedBeer) async {
                             var beer = beers[index];
                             return ListTile(
                               title: Text(beer['Name']),
-                              onTap: () => handleBeerClick(beer),
+                              onTap: () => loadBOTD(beer),
                             );
                           },
                         ))
@@ -471,7 +502,7 @@ Future<void> getComments(dynamic selectedBeer) async {
                         var beer = searchResults[index];
                         return ListTile(
                           title: Text(beer['Name']),
-                          onTap: () => handleBeerClick(beer),
+                          onTap: () => loadBOTD(beer),
                         );
                       },
                     ))
@@ -489,4 +520,145 @@ Future<void> getComments(dynamic selectedBeer) async {
       ],
     );
   }
+}
+
+class BeerOfTheDay extends StatefulWidget {
+  final VoidCallback onExploreFullList;
+
+  const BeerOfTheDay({required this.onExploreFullList, super.key});
+
+  @override
+  _BeerOfTheDayState createState() => _BeerOfTheDayState();
+}
+
+class _BeerOfTheDayState extends State<BeerOfTheDay> {
+  final String app_name = 'paradise-pours-4be127640468';
+  String buildPath(String route) {
+    return 'https://$app_name.herokuapp.com/$route';
+  }
+
+  dynamic beerOfTheDay;
+  bool isLoading = true;
+  dynamic selectedBeer;
+  int? _userId; 
+  bool favBoolean = false; 
+
+  @override
+  void initState() {
+    super.initState();
+    fetchBeerOfTheDay();
+  }
+
+  Future<void> fetchBeerOfTheDay() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({'Name': ''}));
+      List<dynamic> beers = json.decode(response.body)['beer'];
+      beers.shuffle(); // Randomly shuffle the list
+      if (beers.isNotEmpty) {
+        selectedBeer = beers.first;
+        await loadBOTD(selectedBeer);
+      }
+      setState(() {
+        beerOfTheDay = beers.isNotEmpty ? beers.first : null;
+        isLoading = false;
+      });
+    } catch (error) {
+      print('Error fetching beer of the day: $error');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  //Unfavorites Beer
+  void unfavBeer() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/unfavoriteBeer')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+            '_id': selectedBeer['_id']
+          }));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = false;
+        });
+        fetchBeerOfTheDay(); 
+        print('Successfully unfavorited. favBoolean: $favBoolean');
+      }
+    } catch (error) {
+      print('Error unfavoriting: $error');
+    }
+  }
+
+  //Favorites Beer
+  void favBeer() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/favoriteBeer')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedBeer['_id']
+          }));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = true;
+        });
+        fetchBeerOfTheDay(); 
+        print('Successfully favorited. favBoolean: $favBoolean');
+      }
+    } catch (error) {
+      print('Error favoriting: $error');
+    }
+  }
+
+  Future<void> loadBOTD(dynamic beer) async {
+    setState(() {
+      selectedBeer = beer;
+    });
+
+    await Future.wait([
+      checkFav(selectedBeer),
+    ]);
+  }
+
+  Future<void> checkFav(dynamic selectedBeer) async {
+    List<dynamic> favorites = selectedBeer['Favorites'];
+    setState(() {
+      favBoolean = (favorites.contains(_userId.toString()));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Column(
+      children: [
+        if (beerOfTheDay != null)
+          DrinkOtdDrink(
+            drink: beerOfTheDay,
+            userId: _userId,
+            favBoolean: favBoolean,
+            favDrink: favBeer,
+            unfavDrink: unfavBeer,
+          ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16.0), // Add bottom padding
+          child: ElevatedButton(
+            onPressed: widget.onExploreFullList,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFA0522D),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Explore our full beer selection'),
+          ),
+        ),
+      ],
+    );
+  } 
 }

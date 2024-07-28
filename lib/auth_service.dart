@@ -44,6 +44,8 @@ class User {
 
 class AuthService extends ChangeNotifier {
   static const String _userKey = 'user'; //Key used to mark user data.
+  static const String _beerOfTheDayKey = 'beerOfTheDay';
+  static const String _beerOfTheDayDateKey = 'beerOfTheDayDate';
 
   //Saves User data from api login call
   Future<void> saveUser(User user) async {
@@ -72,5 +74,25 @@ class AuthService extends ChangeNotifier {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.remove(_userKey);
     notifyListeners();
+  }
+
+  // Saves Beer of the Day
+  Future<void> saveBeerOfTheDay(Map<String, dynamic> beer) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_beerOfTheDayKey, jsonEncode(beer));
+    await prefs.setString(_beerOfTheDayDateKey, DateTime.now().toIso8601String().split('T').first);
+  }
+
+  // Retrieves Beer of the Day
+  Future<Map<String, dynamic>?> getBeerOfTheDay() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? beerString = prefs.getString(_beerOfTheDayKey);
+    String? dateString = prefs.getString(_beerOfTheDayDateKey);
+    String currentDate = DateTime.now().toIso8601String().split('T').first;
+
+    if (beerString != null && dateString == currentDate) {
+      return jsonDecode(beerString);
+    }
+    return null;
   }
 }

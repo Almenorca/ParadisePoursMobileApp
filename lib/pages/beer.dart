@@ -550,30 +550,42 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
   }
 
   Future<void> fetchBeerOfTheDay() async {
-    try {
-      var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode({'Name': ''}));
-      List<dynamic> beers = json.decode(response.body)['beer'];
-      beers.shuffle(); // Randomly shuffle the list
-      if (beers.isNotEmpty) {
-        selectedBeer = beers.first;
-        await loadBOTD(selectedBeer);
+    final authService = AuthService();
+    dynamic storedBeer = await authService.getBeerOfTheDay();
+
+    if (storedBeer != null) {
+      setState(() {
+        beerOfTheDay = storedBeer;
+        isLoading = false;
+      });
+      await loadBOTD(storedBeer);
+    } else {
+      try {
+        var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'Name': ''}));
+        List<dynamic> beers = json.decode(response.body)['beer'];
+        beers.shuffle();
+        if (beers.isNotEmpty) {
+          selectedBeer = beers.first;
+          await loadBOTD(selectedBeer);
+          await authService.saveBeerOfTheDay(selectedBeer);
+        }
+        setState(() {
+          beerOfTheDay = beers.isNotEmpty ? beers.first : null;
+          isLoading = false;
+        });
+      } catch (error) {
+        print('Error fetching beer of the day: $error');
+        setState(() {
+          isLoading = false;
+        });
       }
-      setState(() {
-        beerOfTheDay = beers.isNotEmpty ? beers.first : null;
-        isLoading = false;
-      });
-    } catch (error) {
-      print('Error fetching beer of the day: $error');
-      setState(() {
-        isLoading = false;
-      });
     }
   }
 
   //Unfavorites Beer
-  void unfavBeer() async {
+  void unfavBOTDBeer() async {
     try {
       var response = await http.post(Uri.parse(buildPath('api/unfavoriteBeer')),
           headers: {'Content-Type': 'application/json'},
@@ -586,7 +598,7 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
           favBoolean = false;
         });
         fetchBeerOfTheDay(); 
-        print('Successfully unfavorited. favBoolean: $favBoolean');
+        print('Successfully unfavorited. favBOTDBoolean: $favBoolean');
       }
     } catch (error) {
       print('Error unfavoriting: $error');
@@ -594,7 +606,7 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
   }
 
   //Favorites Beer
-  void favBeer() async {
+  void favBOTDBeer() async {
     try {
       var response = await http.post(Uri.parse(buildPath('api/favoriteBeer')),
           headers: {'Content-Type': 'application/json'},
@@ -607,7 +619,7 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
           favBoolean = true;
         });
         fetchBeerOfTheDay(); 
-        print('Successfully favorited. favBoolean: $favBoolean');
+        print('Successfully favorited. favBOTDBoolean: $favBoolean');
       }
     } catch (error) {
       print('Error favoriting: $error');
@@ -620,11 +632,11 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
     });
 
     await Future.wait([
-      checkFav(selectedBeer),
+      checkBOTDFav(selectedBeer),
     ]);
   }
 
-  Future<void> checkFav(dynamic selectedBeer) async {
+  Future<void> checkBOTDFav(dynamic selectedBeer) async {
     List<dynamic> favorites = selectedBeer['Favorites'];
     setState(() {
       favBoolean = (favorites.contains(_userId.toString()));
@@ -644,8 +656,8 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
             drink: beerOfTheDay,
             userId: _userId,
             favBoolean: favBoolean,
-            favDrink: favBeer,
-            unfavDrink: unfavBeer,
+            favDrink: favBOTDBeer,
+            unfavDrink: unfavBOTDBeer,
           ),
         Padding(
           padding: const EdgeInsets.only(bottom: 16.0), // Add bottom padding

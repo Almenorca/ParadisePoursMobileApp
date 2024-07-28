@@ -5,7 +5,8 @@ class Ratings extends StatefulWidget {
   final dynamic drinkToDisplay;
   final Function(int, String) rateDrink; 
   final List<Map<String, dynamic>> comments;
-  final dynamic userRating; //Implement later
+  final int userRating;
+  final int index;
 
   const Ratings({
     super.key,
@@ -14,6 +15,7 @@ class Ratings extends StatefulWidget {
     required this.rateDrink,
     required this.comments,
     required this.userRating,
+    required this.index,
   });
 
   @override
@@ -21,9 +23,26 @@ class Ratings extends StatefulWidget {
 }
 
 class _RatingsState extends State<Ratings> {
-  int _rating = 0; // Initial rating if user never rated the drink.
-  final TextEditingController commentController = TextEditingController();
+  late int _rating; // Initial rating if user never rated the drink.
+  late int _index;
+  late int flag;
+  late TextEditingController commentController = TextEditingController();
   PageController _pageController = PageController();
+  
+  @override
+  void initState() {
+    super.initState();
+    _rating = widget.userRating;
+    _index = widget.index;
+    if(widget.index > 0){ //Used to flag if user already commented.
+      flag = 1;
+      print(flag);
+    }
+    else{
+      flag = 0;
+      print(flag);
+    }
+  }
 
   @override
   void dispose() {
@@ -31,9 +50,48 @@ class _RatingsState extends State<Ratings> {
     super.dispose();
   }
 
-  void _handleSubmit() {
-    widget.rateDrink(_rating, commentController.text);
 
+  void _handleSubmit() {
+  if (flag == 1) { //Confirmation popup if user has an existing comment for the drink.
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm Overwrite'),
+          content: Text('Would you like to overwrite your existing comment?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _submitRating();
+              },
+              child: Text('Ok'),
+              style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFFA0522D),
+              foregroundColor: Colors.white,
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('Cancel'),
+              style: ElevatedButton.styleFrom(
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+    else{
+      _submitRating();
+    }
+
+  }
+
+  void _submitRating(){
+    widget.rateDrink(_rating, commentController.text);
     //Tells user they successfully submitted and takes them back to beer list.
     //Tbh the reason this exists because I was struggling to refresh avgRating and comments after submission. 
     showDialog(
@@ -62,6 +120,7 @@ class _RatingsState extends State<Ratings> {
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -94,7 +153,7 @@ class _RatingsState extends State<Ratings> {
                     controller: _pageController,
                     itemCount: widget.comments.length,
                     itemBuilder: (context, index) {
-                      final rating = widget.comments[index]['Rating'];
+                      final rating = widget.comments[_index]['Rating'];
                       return Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -115,7 +174,7 @@ class _RatingsState extends State<Ratings> {
                             SizedBox(height: 12),
                             // Display comment
                             Text(
-                              widget.comments[index]['Comment'] ?? 'No comment',
+                              widget.comments[_index]['Comment'] ?? 'No comment',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w500,

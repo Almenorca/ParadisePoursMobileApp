@@ -174,7 +174,7 @@ class _RegisterFormState extends State<RegisterForm> {
     }
     
     try {
-      var response = await http.post(Uri.parse(buildPath('api/login')),
+      var response = await http.post(Uri.parse(buildPath('api/register')),
         headers: {
           "Content-Type": "application/json",
         },

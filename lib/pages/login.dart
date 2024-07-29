@@ -1,4 +1,4 @@
-// ignore_for_file: unused_element, library_private_types_in_public_api, use_build_context_synchronously, avoid_print
+// ignore_for_file: unused_element, library_private_types_in_public_api, use_build_context_synchronously, avoid_print, non_constant_identifier_names
 
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -120,6 +120,11 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
+  final String app_name = 'paradise-pours-4be127640468';
+  String buildPath(String route) {
+      return 'https://$app_name.herokuapp.com/$route';
+  }
+  
   final TextEditingController usernameController =
       TextEditingController(); //Controllers inside class not widget to prevent textform from refreshing.
   final TextEditingController passwordController = TextEditingController();
@@ -138,9 +143,6 @@ class _LoginFormState extends State<LoginForm> {
   }
 
   Future<void> login() async {
-    var url = Uri.parse(
-        'http://paradise-pours-4be127640468.herokuapp.com/api/login');
-
     if (!validateForm()) {
       setState(() {
         feedbackMessage = "All fields must be filled";
@@ -149,9 +151,7 @@ class _LoginFormState extends State<LoginForm> {
     }
 
     try {
-      var response = await http.post(
-        url,
-        headers: {
+      var response = await http.post(Uri.parse(buildPath('api/login')), headers: {
           "Content-Type": "application/json",
         },
         body: jsonEncode(

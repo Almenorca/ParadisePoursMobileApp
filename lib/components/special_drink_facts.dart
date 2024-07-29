@@ -41,10 +41,14 @@ class _SpecialDrinkFactsState extends State<SpecialDrinkFacts> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  widget.drinkToDisplay['Name'],
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
-                  textAlign: TextAlign.center,
+                Flexible(
+                  child: Text(
+                    widget.drinkToDisplay['Name'],
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
@@ -99,12 +103,12 @@ class _SpecialDrinkFactsState extends State<SpecialDrinkFacts> {
           }
         },
         icon: favBoolean ? const Icon(Icons.favorite) : const Icon(Icons.favorite_border),
-        iconSize: 72.0, 
-        color: Colors.red, 
+        iconSize: 72.0,
+        color: Colors.red,
         padding: const EdgeInsets.all(0),
-        constraints: const BoxConstraints(), 
-        splashColor: Colors.transparent, 
-        highlightColor: Colors.transparent, 
+        constraints: const BoxConstraints(),
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
       ),
     );
   }

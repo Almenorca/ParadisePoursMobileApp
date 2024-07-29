@@ -43,11 +43,13 @@ class _DrinkFactsState extends State<DrinkFacts> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Name of drink
-            Center(
+            Flexible(
               child: Text(
                 widget.drinkToDisplay['Name'],
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 34),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                 textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(height: 8),

@@ -1,3 +1,5 @@
+// ignore_for_file: non_constant_identifier_names, use_build_context_synchronously, avoid_print
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -92,6 +94,11 @@ class RegisterForm extends StatefulWidget {
 }
 
 class _RegisterFormState extends State<RegisterForm> {
+  final String app_name = 'paradise-pours-4be127640468';
+    String buildPath(String route) {
+      return 'https://$app_name.herokuapp.com/$route';
+  }
+
   final TextEditingController firstnameController = TextEditingController();
   final TextEditingController lastnameController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
@@ -157,8 +164,6 @@ class _RegisterFormState extends State<RegisterForm> {
   }
 
   Future<void> register() async {
-    var url = Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/register');
-
     if(!validateForm()){
         setState(
           () {
@@ -169,8 +174,7 @@ class _RegisterFormState extends State<RegisterForm> {
     }
     
     try {
-      var response = await http.post(
-        url,
+      var response = await http.post(Uri.parse(buildPath('api/login')),
         headers: {
           "Content-Type": "application/json",
         },
@@ -312,17 +316,17 @@ class _RegisterFormState extends State<RegisterForm> {
         Visibility(
           visible: showUsernameCriteria,
           child: Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Username must contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                const Text('Username must contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                 Text('At least one letter*', style: TextStyle(color: letterInput ? Colors.green : Colors.red)),
                 Text('3 to 18 characters*', style: TextStyle(color: lenInput ? Colors.green : Colors.red)),
-                Text('Username may contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
-                Text('Numbers', style: TextStyle(color: Colors.grey)),
-                Text('Underscores', style: TextStyle(color: Colors.grey)),
-                Text('Hyphens', style: TextStyle(color: Colors.grey)),
+                const Text('Username may contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                const Text('Numbers', style: TextStyle(color: Colors.grey)),
+                const Text('Underscores', style: TextStyle(color: Colors.grey)),
+                const Text('Hyphens', style: TextStyle(color: Colors.grey)),
               ],
             ),
           ),
@@ -331,11 +335,11 @@ class _RegisterFormState extends State<RegisterForm> {
         Visibility(
           visible: showPasswordCriteria,
           child: Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Password must contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
+                const Text('Password must contain the following:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20)),
                 Text('8 to 32 characters*', style: TextStyle(color: pLenInput ? Colors.green : Colors.red)),
                 Text('At least one letter*', style: TextStyle(color: pLettInput ? Colors.green : Colors.red)),
                 Text('At least one number*', style: TextStyle(color: pNumInput ? Colors.green : Colors.red)),

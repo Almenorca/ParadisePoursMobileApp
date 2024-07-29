@@ -1,7 +1,8 @@
+// ignore_for_file: use_key_in_widget_constructors, avoid_print, unused_element, library_private_types_in_public_api, non_constant_identifier_names
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../navigation_menu.dart';
 
 class RecoveryPage extends StatefulWidget {
   const RecoveryPage({super.key});
@@ -48,7 +49,7 @@ class _RecoveryPageState extends State<RecoveryPage> {
           children: <Widget>[
             // Background image
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 image: DecorationImage(
                   image: AssetImage('assets/images/BlankBackgroundImage.jpg'),
                   fit: BoxFit.cover,
@@ -68,18 +69,18 @@ class _RecoveryPageState extends State<RecoveryPage> {
                   child: Padding(
                     padding: const EdgeInsets.only(top: 20.0),
                     child: Container(
-                      margin: EdgeInsets.only(top: 20.0),
-                      padding: EdgeInsets.all(40.0),
+                      margin: const EdgeInsets.only(top: 20.0),
+                      padding: const EdgeInsets.all(40.0),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.9),
-                        border: Border.all(color: Color(0xFFA0522D), width: 2.0),
+                        border: Border.all(color: const Color(0xFFA0522D), width: 2.0),
                         borderRadius: BorderRadius.circular(12.0),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withOpacity(0.2),
                             spreadRadius: 0,
                             blurRadius: 20,
-                            offset: Offset(0, 10),
+                            offset: const Offset(0, 10),
                           ),
                         ],
                       ),
@@ -93,9 +94,6 @@ class _RecoveryPageState extends State<RecoveryPage> {
             ),
           ],
         ),
-
-        endDrawer: NavigationMenu(),
-
       ),
     );
   }
@@ -107,6 +105,11 @@ class RecoveryForm extends StatefulWidget {
 }
 
 class _RecoveryFormState extends State<RecoveryForm> {
+    final String app_name = 'paradise-pours-4be127640468';
+    String buildPath(String route) {
+        return 'https://$app_name.herokuapp.com/$route';
+        
+    }
     final TextEditingController emailController = TextEditingController();
     String feedbackMessage = '';
 
@@ -115,12 +118,8 @@ class _RecoveryFormState extends State<RecoveryForm> {
       return _buildRecoveryForm();
     }
     Future<void> recovery() async {
-
-      var url = Uri.parse('http://paradise-pours-4be127640468.herokuapp.com/api/recoverAccount');
-
       try {
-        var response = await http.post(
-          url,
+        var response = await http.post(Uri.parse(buildPath('api/recoverAccount')),
           headers: {
             "Content-Type": "application/json",
           },
@@ -165,7 +164,7 @@ class _RecoveryFormState extends State<RecoveryForm> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: IconButton(
-                icon: Icon(
+                icon: const Icon(
                   Icons.arrow_back,
                   color: Color(0xFFA0522D),
                 ),
@@ -175,11 +174,14 @@ class _RecoveryFormState extends State<RecoveryForm> {
                 }
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                'Recover Account',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+            const Flexible(
+              child: Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Text(
+                  'Recover Account',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
           ],
@@ -188,7 +190,7 @@ class _RecoveryFormState extends State<RecoveryForm> {
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: emailController,
-            decoration: InputDecoration(labelText: 'Email'),
+            decoration: const InputDecoration(labelText: 'Email'),
           ),
         ),
         const SizedBox(height: 10.0),
@@ -198,20 +200,20 @@ class _RecoveryFormState extends State<RecoveryForm> {
             color: Colors.red,
           ),
         ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         ElevatedButton(
           onPressed: () {
             recovery();
           },
           style: ElevatedButton.styleFrom(
-            padding: EdgeInsets.all(12.0),
-            backgroundColor: Color(0xFFA0522D), 
+            padding: const EdgeInsets.all(12.0),
+            backgroundColor: const Color(0xFFA0522D), 
             foregroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8.0),
             ),
           ),
-          child: Text('Submit',
+          child: const Text('Submit',
           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),),
         ),
       ],

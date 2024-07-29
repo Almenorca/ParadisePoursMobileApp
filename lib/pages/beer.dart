@@ -479,12 +479,12 @@ class _BeerListState extends State<BeerList> {
         //Beer List
         Container(
           padding: const EdgeInsets.all(10),
+          height: MediaQuery.of(context).size.height * 0.8,
           child: validSearch
               ? (searchResults.isEmpty
                   ? (beers.isEmpty
                       ? const Center(child: CircularProgressIndicator())
                       : ListView.builder(
-                          shrinkWrap: true,
                           itemCount: beers.length,
                           itemBuilder: (context, index) {
                             var beer = beers[index];
@@ -496,7 +496,6 @@ class _BeerListState extends State<BeerList> {
                         ))
                   //Search Bar
                   : ListView.builder(
-                      shrinkWrap: true,
                       itemCount: searchResults.length,
                       itemBuilder: (context, index) {
                         var beer = searchResults[index];

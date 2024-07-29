@@ -442,12 +442,12 @@ Future<void> getComments(dynamic selectedLiquor) async {
         //Liquor List
         Container(
           padding: const EdgeInsets.all(10),
+          height: MediaQuery.of(context).size.height * 0.8,
           child: validSearch
               ? (searchResults.isEmpty
                   ? (liquors.isEmpty
                       ? const Center(child: CircularProgressIndicator())
                       : ListView.builder(
-                          shrinkWrap: true,
                           itemCount: liquors.length,
                           itemBuilder: (context, index) {
                             var liquor = liquors[index];
@@ -459,7 +459,6 @@ Future<void> getComments(dynamic selectedLiquor) async {
                         ))
                   //Search Bar
                   : ListView.builder(
-                      shrinkWrap: true,
                       itemCount: searchResults.length,
                       itemBuilder: (context, index) {
                         var liquor = searchResults[index];

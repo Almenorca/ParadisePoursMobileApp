@@ -473,12 +473,12 @@ class _WineListState extends State<WineList> {
         //Wine List
         Container(
           padding: const EdgeInsets.all(10),
+          height: MediaQuery.of(context).size.height * 0.8,
           child: validSearch
               ? (searchResults.isEmpty
                   ? (wines.isEmpty
                       ? const Center(child: CircularProgressIndicator())
                       : ListView.builder(
-                          shrinkWrap: true,
                           itemCount: wines.length,
                           itemBuilder: (context, index) {
                             var wine = wines[index];
@@ -490,7 +490,6 @@ class _WineListState extends State<WineList> {
                         ))
                   //Search Bar
                   : ListView.builder(
-                      shrinkWrap: true,
                       itemCount: searchResults.length,
                       itemBuilder: (context, index) {
                         var wine = searchResults[index];

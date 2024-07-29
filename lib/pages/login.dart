@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element, library_private_types_in_public_api, use_build_context_synchronously, avoid_print
+
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -79,10 +81,10 @@ class _LoginPageState extends State<LoginPage> {
                     child: Center(
                       child: ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.pushNamed(context, '/about');
+                          Navigator.pushNamed(context, '/about_login');
                         },
-                        icon: Icon(Icons.info, color: Colors.white),
-                        label: Text(
+                        icon: const Icon(Icons.info, color: Colors.white),
+                        label: const Text(
                           'About Us',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
@@ -90,8 +92,8 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.all(12.0),
-                          backgroundColor: Color(0xFFA0522D),
+                          padding: const EdgeInsets.all(12.0),
+                          backgroundColor: const Color(0xFFA0522D),
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8.0),
@@ -190,8 +192,8 @@ class _LoginFormState extends State<LoginForm> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
+        const Padding(
+          padding: EdgeInsets.all(8.0),
           child: Text(
             'Sign In',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -201,10 +203,10 @@ class _LoginFormState extends State<LoginForm> {
           padding: const EdgeInsets.all(8.0),
           child: TextField(
             controller: usernameController,
-            decoration: InputDecoration(labelText: 'Username'),
+            decoration: const InputDecoration(labelText: 'Username'),
           ),
         ),
-        SizedBox(height: 16.0),
+        const SizedBox(height: 16.0),
         Padding(
           padding: const EdgeInsets.all(8.0),
           child: TextField(
@@ -222,10 +224,10 @@ class _LoginFormState extends State<LoginForm> {
             ),
           ),
         ),
-        SizedBox(height: 10.0),
+        const SizedBox(height: 10.0),
         Text(
           feedbackMessage,
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.red,
           ),
         ),
@@ -238,20 +240,20 @@ class _LoginFormState extends State<LoginForm> {
               child: ElevatedButton(
                 onPressed: login,
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.all(12.0),
-                  backgroundColor: Color(0xFFA0522D),
+                  padding: const EdgeInsets.all(12.0),
+                  backgroundColor: const Color(0xFFA0522D),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'Login',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                 ),
               ),
             ),
-            SizedBox(height: 8.0),
+            const SizedBox(height: 8.0),
             //Register Button
             Column(
               children: [
@@ -262,14 +264,14 @@ class _LoginFormState extends State<LoginForm> {
                       Navigator.pushNamed(context, '/register');
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.all(12.0),
-                      backgroundColor: Color(0xFFA0522D),
+                      padding: const EdgeInsets.all(12.0),
+                      backgroundColor: const Color(0xFFA0522D),
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                     ),
-                    child: Text(
+                    child: const Text(
                       'Create Account',
                       style:
                           TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
@@ -287,7 +289,7 @@ class _LoginFormState extends State<LoginForm> {
             onTap: () {
               Navigator.pushNamed(context, '/recovery');
             },
-            child: Text(
+            child: const Text(
               'Forgot Account',
               style: TextStyle(
                 color: Color(0xFFA0522D),

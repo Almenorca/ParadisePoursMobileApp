@@ -9,6 +9,7 @@ import 'package:paradise_pours_app/pages/wine.dart';
 import 'package:paradise_pours_app/pages/login.dart';
 import 'package:paradise_pours_app/pages/settings.dart';
 import 'package:paradise_pours_app/pages/about.dart';
+import 'package:paradise_pours_app/pages/about_login.dart';
 import 'package:paradise_pours_app/pages/verify_email.dart';
 import 'package:paradise_pours_app/pages/change_password.dart';
 import 'package:paradise_pours_app/pages/register.dart';
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
           '/login': (context) => const LoginPage(),
           '/settings': (context) => const SettingsPage(),
           '/about': (context) => const AboutUsPage(),
+          '/about_login': (context) => const AboutUsPageLogin(),
           '/verifyemail': (context) => const VerifyEmailPage(),
           '/changepassword': (context) => const ChangePasswordPage(),
           '/register': (context) => const RegisterPage(),

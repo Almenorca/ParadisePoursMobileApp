@@ -1,9 +1,9 @@
 // ignore_for_file: non_constant_identifier_names, avoid_print, use_build_context_synchronously, library_private_types_in_public_api
-
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:paradise_pours_app/auth_service.dart';
-import 'package:paradise_pours_app/components/display_dotd.dart';
+import 'package:paradise_pours_app/components/special_drink.dart';
 import 'dart:convert';
 
 import '../navigation_menu.dart';
@@ -156,7 +156,7 @@ class _BeerListState extends State<BeerList> {
     }
   }
 
-  Future<void> loadBOTD(dynamic beer) async {
+  Future<void> handleBeerClick(dynamic beer) async {
     setState(() {
       selectedBeer = beer;
     });
@@ -490,7 +490,7 @@ class _BeerListState extends State<BeerList> {
                             var beer = beers[index];
                             return ListTile(
                               title: Text(beer['Name']),
-                              onTap: () => loadBOTD(beer),
+                              onTap: () => handleBeerClick(beer),
                             );
                           },
                         ))
@@ -502,7 +502,7 @@ class _BeerListState extends State<BeerList> {
                         var beer = searchResults[index];
                         return ListTile(
                           title: Text(beer['Name']),
-                          onTap: () => loadBOTD(beer),
+                          onTap: () => handleBeerClick(beer),
                         );
                       },
                     ))
@@ -542,15 +542,16 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
   dynamic selectedBeer;
   int? _userId; 
   bool favBoolean = false; 
+  late AuthService authService;
 
   @override
   void initState() {
     super.initState();
+    authService = AuthService();
     fetchBeerOfTheDay();
   }
 
   Future<void> fetchBeerOfTheDay() async {
-    final authService = AuthService();
     dynamic storedBeer = await authService.getBeerOfTheDay();
 
     if (storedBeer != null) {
@@ -584,49 +585,7 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
     }
   }
 
-  //Unfavorites Beer
-  void unfavBOTDBeer() async {
-    try {
-      var response = await http.post(Uri.parse(buildPath('api/unfavoriteBeer')),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode({
-            'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
-            '_id': selectedBeer['_id']
-          }));
-      if (response.statusCode == 200) {
-        setState(() {
-          favBoolean = false;
-        });
-        fetchBeerOfTheDay(); 
-        print('Successfully unfavorited. favBOTDBoolean: $favBoolean');
-      }
-    } catch (error) {
-      print('Error unfavoriting: $error');
-    }
-  }
-
-  //Favorites Beer
-  void favBOTDBeer() async {
-    try {
-      var response = await http.post(Uri.parse(buildPath('api/favoriteBeer')),
-          headers: {'Content-Type': 'application/json'},
-          body: json.encode({
-            'UserId': _userId.toString(),
-            '_id': selectedBeer['_id']
-          }));
-      if (response.statusCode == 200) {
-        setState(() {
-          favBoolean = true;
-        });
-        fetchBeerOfTheDay(); 
-        print('Successfully favorited. favBOTDBoolean: $favBoolean');
-      }
-    } catch (error) {
-      print('Error favoriting: $error');
-    }
-  }
-
-  Future<void> loadBOTD(dynamic beer) async {
+   Future<void> loadBOTD(dynamic beer) async {
     setState(() {
       selectedBeer = beer;
     });
@@ -643,6 +602,48 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
     });
   }
 
+  //Favorites Beer
+  void favBOTDBeer() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/favoriteBeer')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedBeer['_id']
+          }));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = true;
+        });
+        await authService.saveBeerOfTheDay(selectedBeer);
+        print('Successfully favorited. favBOTDBoolean: $favBoolean');
+      }
+    } catch (error) {
+      print('Error favoriting: $error');
+    }
+  }
+
+  //Unfavorites Beer
+  void unfavBOTDBeer() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/unfavoriteBeer')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+            '_id': selectedBeer['_id']
+          }));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = false;
+        });
+        await authService.saveBeerOfTheDay(selectedBeer);
+        print('Successfully unfavorited. favBOTDBoolean: $favBoolean');
+      }
+    } catch (error) {
+      print('Error unfavoriting: $error');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -651,16 +652,38 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
 
     return Column(
       children: [
-        if (beerOfTheDay != null)
-          DrinkOtdDrink(
+        if (beerOfTheDay != null) ...[
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FaIcon(FontAwesomeIcons.beerMugEmpty, color: Colors.brown),
+                SizedBox(width: 8), 
+                Text(
+                  'Beer Of The Day',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.brown,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(width: 8),
+                FaIcon(FontAwesomeIcons.beerMugEmpty, color: Colors.brown),
+              ],
+            ),
+          ),
+          SpecialDrink(
             drink: beerOfTheDay,
             userId: _userId,
             favBoolean: favBoolean,
             favDrink: favBOTDBeer,
             unfavDrink: unfavBOTDBeer,
           ),
+        ],
         Padding(
-          padding: const EdgeInsets.only(bottom: 16.0), // Add bottom padding
+          padding: const EdgeInsets.only(bottom: 16.0),
           child: ElevatedButton(
             onPressed: widget.onExploreFullList,
             style: ElevatedButton.styleFrom(
@@ -672,5 +695,5 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
         ),
       ],
     );
-  } 
+  }
 }

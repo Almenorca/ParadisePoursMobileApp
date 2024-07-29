@@ -1,13 +1,29 @@
+// ignore_for_file: avoid_print, library_private_types_in_public_api, non_constant_identifier_names, use_build_context_synchronously
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:paradise_pours_app/auth_service.dart';
+import 'package:paradise_pours_app/components/special_drink.dart';
 import 'dart:convert';
 
 import '../navigation_menu.dart';
 import '../components/display_drink.dart';
 
-class WinePage extends StatelessWidget {
+class WinePage extends StatefulWidget {
   const WinePage({super.key});
+
+  @override
+  _WinePageState createState() => _WinePageState();
+}
+
+class _WinePageState extends State<WinePage> {
+  bool showWineList = false;
+
+  void toggleWineList() {
+    setState(() {
+      showWineList = !showWineList;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,11 +73,13 @@ class WinePage extends StatelessWidget {
                           kToolbarHeight), // Match app bar height
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Card(
                         color: Colors.white.withAlpha(210),
                         elevation: 8.0,
-                        child: WineList(), // Use WineList widget here
+                        child: showWineList
+                            ? WineList(onBack: toggleWineList) // Use WineList widget here
+                            : WineOfTheMonth(onExploreFullList: toggleWineList),
                       ),
                     ),
                   ),
@@ -77,19 +95,19 @@ class WinePage extends StatelessWidget {
 }
 
 class WineList extends StatefulWidget {
-  const WineList({super.key});
+  final VoidCallback onBack;
+  const WineList({required this.onBack, super.key});
 
   @override
-  _WinePageState createState() => _WinePageState();
+  _WineListState createState() => _WineListState();
 }
 
-class _WinePageState extends State<WineList> {
+class _WineListState extends State<WineList> {
   final String app_name = 'paradise-pours-4be127640468';
   String buildPath(String route) {
       return 'https://$app_name.herokuapp.com/$route';
   }
 
-  // UserContext userContext;
   List<dynamic> wines = [];
   dynamic selectedWine;
   bool showDisplayWine = false;
@@ -100,7 +118,7 @@ class _WinePageState extends State<WineList> {
   List<dynamic> filteredWines = [];
 
   int? _userId; //User Id. Used for favorite and rating
-  bool favBoolean = false; //Used as a checker if user liked a beer. Will be used to passed down for favorite.
+  bool favBoolean = false; //Used as a checker if user liked a wine. Will be used to passed down for favorite.
   int userRating = 0; //User rating
   int index = 0;
   double avgRating = 0; //Avg Ratings of drink
@@ -138,7 +156,7 @@ class _WinePageState extends State<WineList> {
     }
   }
 
-  void handleWineClick(dynamic wine) async{
+  Future<void> handleWineClick(dynamic wine) async{
     setState(() {
       selectedWine = wine;
     });
@@ -175,7 +193,7 @@ class _WinePageState extends State<WineList> {
     );
   }
 
-  Future<void> checkFav(dynamic selectedBeer) async {
+  Future<void> checkFav(dynamic selectedWine) async {
     print("original boolean = $favBoolean");
     List<dynamic> favorites = selectedWine['Favorites'];
     print("$selectedWine['Favorites']");
@@ -188,9 +206,11 @@ class _WinePageState extends State<WineList> {
   //Get User's rating
   Future<void> getRating(dynamic selectedWine) async {
     try {
-      var uri = Uri.parse(buildPath('api/userRating')).
-      replace(queryParameters: {'UserId': _userId, 
-                                '_id': selectedWine['_id']});
+      var uri = Uri.parse(buildPath('api/userWineRating')).replace(
+          queryParameters: {
+            'UserId': _userId, 
+            '_id': selectedWine['_id']
+          });
       var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
@@ -254,13 +274,15 @@ class _WinePageState extends State<WineList> {
     try {
       var response = await http.post(Uri.parse(buildPath('api/unfavoriteWine')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
-                              '_id': selectedWine['_id']}));
+          body: json.encode({
+            'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+            '_id': selectedWine['_id']
+          }));
       if (response.statusCode == 200) {
         setState(() {
           favBoolean = false;
         });
-        fetchAllWines(); //Call function to refresh wine list to show that Favorites has been edited.
+        fetchAllWines(); 
       print('Successfully unfavorited. favBoolean: $favBoolean');
       }
     } 
@@ -274,13 +296,15 @@ class _WinePageState extends State<WineList> {
       try {
       var response = await http.post(Uri.parse(buildPath('api/favoriteWine')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(),
-                            '_id': selectedWine['_id']}));
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedWine['_id']
+          }));
       if (response.statusCode == 200) {
         setState(() {
           favBoolean = true;
         });
-        fetchAllWines(); //Call function to refresh wine list to show that Favorites has been edited.
+        fetchAllWines(); 
         print('Successfully favorited. favBoolean: $favBoolean');
       }
     } 
@@ -294,12 +318,14 @@ class _WinePageState extends State<WineList> {
       try {
       var response = await http.post(Uri.parse(buildPath('api/rateWine')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(),
-                            '_id': selectedWine['_id'],
-                            'Stars': rating,
-                            'Comment': comment,}));
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedWine['_id'],
+            'Stars': rating,
+            'Comment': comment,
+          }));
       if (response.statusCode == 200) {
-        fetchAllWines(); //Call function to refresh wine list to show that Favorites has been edited.
+        fetchAllWines(); 
         print('Successfully rated and commented');
       }
     } 
@@ -383,12 +409,21 @@ class _WinePageState extends State<WineList> {
       children: <Widget>[
         Container(
           padding: const EdgeInsets.all(10),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text('Wine List', style: TextStyle(fontSize: 24)),
-            ],
-          ),
+          child: Stack(
+          children: <Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack, 
+              ),
+            ),
+            const Align(
+              alignment: Alignment.center,
+              child: Text('Wine List', style: TextStyle(fontSize: 24)),
+            ),
+          ],
+        ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -413,6 +448,7 @@ class _WinePageState extends State<WineList> {
             ],
           ),
         ),
+        //Filter Menu
         Container(
           padding: const EdgeInsets.all(10),
           child: DropdownButton<String>(
@@ -434,6 +470,7 @@ class _WinePageState extends State<WineList> {
             }).toList(),
           ),
         ),
+        //Wine List
         Container(
           padding: const EdgeInsets.all(10),
           child: validSearch
@@ -451,6 +488,7 @@ class _WinePageState extends State<WineList> {
                             );
                           },
                         ))
+                  //Search Bar
                   : ListView.builder(
                       shrinkWrap: true,
                       itemCount: searchResults.length,
@@ -476,4 +514,179 @@ class _WinePageState extends State<WineList> {
       ],
     );
   }
+}
+
+class WineOfTheMonth extends StatefulWidget {
+  final VoidCallback onExploreFullList;
+
+  const WineOfTheMonth({required this.onExploreFullList, super.key});
+
+  @override
+  _WineOfTheMonthState createState() => _WineOfTheMonthState();
+}
+
+class _WineOfTheMonthState extends State<WineOfTheMonth> {
+  final String app_name = 'paradise-pours-4be127640468';
+  String buildPath(String route) {
+    return 'https://$app_name.herokuapp.com/$route';
+  }
+
+  dynamic wineOfTheMonth;
+  bool isLoading = true;
+  dynamic selectedWine;
+  int? _userId; 
+  bool favBoolean = false; 
+
+  @override
+  void initState() {
+    super.initState();
+    fetchWineOfTheMonth();
+  }
+
+  Future<void> fetchWineOfTheMonth() async {
+    final authService = AuthService();
+    dynamic storedWine = await authService.getWineOfTheMonth();
+
+    if (storedWine != null) {
+      setState(() {
+        wineOfTheMonth = storedWine;
+        isLoading = false;
+      });
+      await loadWOTM(storedWine);
+    } else {
+      try {
+        var response = await http.post(Uri.parse(buildPath('api/searchWine')),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'Name': ''}));
+        List<dynamic> wines = json.decode(response.body)['wine'];
+        wines.shuffle();
+        if (wines.isNotEmpty) {
+          selectedWine = wines.first;
+          await loadWOTM(selectedWine);
+          await authService.saveWineOfTheMonth(selectedWine);
+        }
+        setState(() {
+          wineOfTheMonth = wines.isNotEmpty ? wines.first : null;
+          isLoading = false;
+        });
+      } catch (error) {
+        print('Error fetching wine of the month: $error');
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  //Unfavorites Wine
+  void unfavWOTMWine() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/unfavoriteWine')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+            '_id': selectedWine['_id']
+          }));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = false;
+        });
+        fetchWineOfTheMonth(); 
+        print('Successfully unfavorited. favWOTMBoolean: $favBoolean');
+      }
+    } catch (error) {
+      print('Error unfavoriting: $error');
+    }
+  }
+
+  //Favorites Wine
+  void favWOTMWine() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/favoriteWine')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedWine['_id']
+          }));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = true;
+        });
+        fetchWineOfTheMonth(); 
+        print('Successfully favorited. favWOTMBoolean: $favBoolean');
+      }
+    } catch (error) {
+      print('Error favoriting: $error');
+    }
+  }
+
+  Future<void> loadWOTM(dynamic wine) async {
+    setState(() {
+      selectedWine = wine;
+    });
+
+    await Future.wait([
+      checkWOTMFav(selectedWine),
+    ]);
+  }
+
+  Future<void> checkWOTMFav(dynamic selectedWine) async {
+    List<dynamic> favorites = selectedWine['Favorites'];
+    setState(() {
+      favBoolean = (favorites.contains(_userId.toString()));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return Column(
+      children: [
+        if (wineOfTheMonth != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                FaIcon(FontAwesomeIcons.wineGlassEmpty, color: Colors.redAccent.withAlpha(150),),
+                const SizedBox(width: 8), 
+                Text(
+                  'Wine Of The Month',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.redAccent.withAlpha(150),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(width: 8),
+                FaIcon(FontAwesomeIcons.wineGlassEmpty, color: Colors.redAccent.withAlpha(150),),
+              ],
+            ),
+          ),
+          SpecialDrink(
+            drink: wineOfTheMonth,
+            userId: _userId,
+            favBoolean: favBoolean,
+            favDrink: favWOTMWine,
+            unfavDrink: unfavWOTMWine,
+          ),
+        ],
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: ElevatedButton(
+            onPressed: widget.onExploreFullList,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent.withAlpha(150),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Explore our full wine selection'),
+          ),
+        ),
+      ],
+    );
+  } 
 }

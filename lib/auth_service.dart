@@ -46,6 +46,8 @@ class AuthService extends ChangeNotifier {
   static const String _userKey = 'user'; //Key used to mark user data.
   static const String _beerOfTheDayKey = 'beerOfTheDay';
   static const String _beerOfTheDayDateKey = 'beerOfTheDayDate';
+  static const String _wineOfTheMonthKey = 'wineOfTheMonth';
+  static const String _wineOfTheMonthDateKey = 'wineOfTheMonthDate';
 
   //Saves User data from api login call
   Future<void> saveUser(User user) async {
@@ -88,10 +90,36 @@ class AuthService extends ChangeNotifier {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? beerString = prefs.getString(_beerOfTheDayKey);
     String? dateString = prefs.getString(_beerOfTheDayDateKey);
-    String currentDate = DateTime.now().toIso8601String().split('T').first;
 
-    if (beerString != null && dateString == currentDate) {
-      return jsonDecode(beerString);
+    if (beerString != null && dateString != null) {
+      DateTime storedDate = DateTime.parse(dateString);
+      DateTime currentDate = DateTime.now();
+      if (storedDate.day == currentDate.day) {
+        return jsonDecode(beerString);
+      }
+    }
+    return null;
+  }
+
+  // Saves Wine of the Month
+  Future<void> saveWineOfTheMonth(Map<String, dynamic> wine) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_wineOfTheMonthKey, jsonEncode(wine));
+    await prefs.setString(_wineOfTheMonthDateKey, DateTime.now().toIso8601String().split('T').first);
+  }
+
+  // Retrieves Wine of the Month
+  Future<Map<String, dynamic>?> getWineOfTheMonth() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? wineString = prefs.getString(_wineOfTheMonthKey);
+    String? dateString = prefs.getString(_wineOfTheMonthDateKey);
+
+    if (wineString != null && dateString != null) {
+      DateTime storedDate = DateTime.parse(dateString);
+      DateTime currentDate = DateTime.now();
+      if (storedDate.month == currentDate.month) {
+        return jsonDecode(wineString);
+      }
     }
     return null;
   }

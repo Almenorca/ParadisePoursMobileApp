@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-class DrinkOtdFacts extends StatefulWidget {
+class SpecialDrinkFacts extends StatefulWidget {
   final dynamic drinkToDisplay;
   final dynamic userId;
   final dynamic favBoolean;
   final Function favDrink;
   final Function unfavDrink;
 
-  const DrinkOtdFacts({
+  const SpecialDrinkFacts({
     super.key,
     required this.drinkToDisplay,
     required this.userId,
@@ -18,10 +17,10 @@ class DrinkOtdFacts extends StatefulWidget {
   });
 
   @override
-  _DrinkFactsState createState() => _DrinkFactsState();
+  _SpecialDrinkFactsState createState() => _SpecialDrinkFactsState();
 }
 
-class _DrinkFactsState extends State<DrinkOtdFacts> {
+class _SpecialDrinkFactsState extends State<SpecialDrinkFacts> {
   late bool favBoolean;
 
   @override
@@ -42,15 +41,11 @@ class _DrinkFactsState extends State<DrinkOtdFacts> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const FaIcon(FontAwesomeIcons.beerMugEmpty, color: Colors.brown),
-                const SizedBox(width: 8), 
                 Text(
                   widget.drinkToDisplay['Name'],
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 25),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(width: 8), 
-                const FaIcon(FontAwesomeIcons.beerMugEmpty, color: Colors.brown),
               ],
             ),
             const SizedBox(height: 16),

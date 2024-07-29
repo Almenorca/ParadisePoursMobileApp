@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'drink_otd_facts.dart';
+// ignore_for_file: library_private_types_in_public_api
 
-class DrinkOtdDrink extends StatefulWidget {
+import 'package:flutter/material.dart';
+import 'special_drink_facts.dart';
+
+class SpecialDrink extends StatefulWidget {
   final dynamic drink;
   final dynamic userId;
   //Favorite Features
@@ -9,7 +11,7 @@ class DrinkOtdDrink extends StatefulWidget {
   final Function favDrink;
   final Function unfavDrink;  
 
-  const DrinkOtdDrink(
+  const SpecialDrink(
     {super.key, 
     required this.drink,
     required this.userId,
@@ -22,7 +24,7 @@ class DrinkOtdDrink extends StatefulWidget {
   _DisplayDrinkState createState() => _DisplayDrinkState();
 }
 
-class _DisplayDrinkState extends State<DrinkOtdDrink> {
+class _DisplayDrinkState extends State<SpecialDrink> {
   bool showRatings = false;
 
   @override
@@ -32,7 +34,7 @@ class _DisplayDrinkState extends State<DrinkOtdDrink> {
 
   @override
   Widget build(BuildContext context) {
-    Widget compToDisplay =  DrinkOtdFacts(
+    Widget compToDisplay =  SpecialDrinkFacts(
                         drinkToDisplay: widget.drink, 
                         userId: widget.userId, 
                         favBoolean: widget.favBoolean,

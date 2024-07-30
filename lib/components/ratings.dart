@@ -195,41 +195,6 @@ class _RatingsState extends State<Ratings> {
                         onPageChanged: (index) {
                         },
                       ),
-                      // Navigation arrows
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: IconButton(
-                            iconSize: 48.0, 
-                            icon: Icon(Icons.arrow_left),
-                            color: Colors.black.withOpacity(0),
-                            onPressed: () {
-                              _pageController.previousPage(
-                                duration: Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: IconButton(
-                            iconSize: 48.0, 
-                            icon: Icon(Icons.arrow_right),
-                            color: Colors.black.withOpacity(0),
-                            onPressed: () {
-                              _pageController.nextPage(
-                                duration: Duration(milliseconds: 300),
-                                curve: Curves.easeInOut,
-                              );
-                            },
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),

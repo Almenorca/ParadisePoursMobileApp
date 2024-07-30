@@ -7,7 +7,7 @@ class DrinkFacts extends StatefulWidget {
   final dynamic favBoolean;
   final Function favDrink;
   final Function unfavDrink;
-  final double? avgRating; // Updated to double? to handle null values
+  final dynamic avgRating; // Updated to double? to handle null values
 
   const DrinkFacts({
     super.key,
@@ -92,29 +92,28 @@ class _DrinkFactsState extends State<DrinkFacts> {
     );
   }
 
-  Widget _buildStarRating(double? rating) {
-    // Provide a default value of 0 if rating is null
-    double safeRating = rating ?? 0.0;
+  Widget _buildStarRating(dynamic rating) {
+  // Convert rating to double if it's an int, and provide a default value of 0 if rating is null
+  double safeRating = (rating is int ? rating.toDouble() : rating) ?? 0.0;
 
-    int fullStars = safeRating.floor();
-    double fractionalStar = safeRating - fullStars;
+  int fullStars = safeRating.floor();
+  double fractionalStar = safeRating - fullStars;
 
-    List<Widget> stars = List.generate(5, (index) {
-      if (index < fullStars) {
-        return const Icon(Icons.star, color: Colors.yellow, size: 32.0);
-      } else if (index == fullStars && fractionalStar > 0) {
-        return const Icon(Icons.star_half, color: Colors.yellow, size: 32.0);
-      } else {
-        return const Icon(Icons.star_border, color: Colors.yellow, size: 32.0);
-      }
-    });
+  List<Widget> stars = List.generate(5, (index) {
+    if (index < fullStars) {
+      return const Icon(Icons.star, color: Colors.yellow, size: 32.0);
+    } else if (index == fullStars && fractionalStar > 0) {
+      return const Icon(Icons.star_half, color: Colors.yellow, size: 32.0);
+    } else {
+      return const Icon(Icons.star_border, color: Colors.yellow, size: 32.0);
+    }
+  });
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: stars,
-    );
-  }
-
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.center,
+    children: stars,
+  );
+}
   Widget _buildFavoriteButton() {
     return Container(
       alignment: Alignment.center,

@@ -1,13 +1,28 @@
+// ignore_for_file: avoid_print, library_private_types_in_public_api, non_constant_identifier_names, use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:paradise_pours_app/auth_service.dart';
+import 'package:paradise_pours_app/components/special_drink.dart';
 import 'dart:convert';
 
 import '../navigation_menu.dart';
 import '../components/display_drink.dart';
 
-class LiquorPage extends StatelessWidget {
+class LiquorPage extends StatefulWidget {
   const LiquorPage({super.key});
+
+  @override
+  _LiquorPageState createState() => _LiquorPageState();
+}
+
+class _LiquorPageState extends State<LiquorPage> {
+  bool showLiquorList = false;
+
+  void toggleLiquorList() {
+    setState(() {
+      showLiquorList = !showLiquorList;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +39,7 @@ class LiquorPage extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
-          backgroundColor: Colors.deepOrange.withAlpha(150),
+          backgroundColor: Colors.redAccent.withAlpha(150),
           foregroundColor: Colors.white,
           leading: Container(
             decoration: const BoxDecoration(
@@ -43,7 +58,7 @@ class LiquorPage extends StatelessWidget {
                 image: DecorationImage(
                   image: AssetImage('assets/images/LiquorBackground2Enhanced.jpg'),
                   fit: BoxFit.cover,
-                  alignment: Alignment.centerLeft,
+                  alignment: Alignment.center,
                 ),
               ),
             ),
@@ -57,11 +72,13 @@ class LiquorPage extends StatelessWidget {
                           kToolbarHeight), // Match app bar height
                   Center(
                     child: Padding(
-                      padding: EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(16.0),
                       child: Card(
                         color: Colors.white.withAlpha(210),
                         elevation: 8.0,
-                        child: LiquorList(), // Use LiquorList widget here
+                        child: showLiquorList
+                            ? LiquorList(onBack: toggleLiquorList) // Use LiquorList widget here
+                            : LiquoroftheMonth(onExploreFullList: toggleLiquorList),
                       ),
                     ),
                   ),
@@ -77,19 +94,19 @@ class LiquorPage extends StatelessWidget {
 }
 
 class LiquorList extends StatefulWidget {
-  const LiquorList({super.key});
+  final VoidCallback onBack;
+  const LiquorList({required this.onBack, super.key});
 
   @override
-  _LiquorPageState createState() => _LiquorPageState();
+  _LiquorListState createState() => _LiquorListState();
 }
 
-class _LiquorPageState extends State<LiquorList> {
+class _LiquorListState extends State<LiquorList> {
   final String app_name = 'paradise-pours-4be127640468';
   String buildPath(String route) {
       return 'https://$app_name.herokuapp.com/$route';
   }
 
-  // UserContext userContext;
   List<dynamic> liquors = [];
   dynamic selectedLiquor;
   bool showDisplayLiquor = false;
@@ -134,11 +151,11 @@ class _LiquorPageState extends State<LiquorList> {
         liquors = liquorsData;
       });
     } catch (error) {
-      print('Error fetching all Liquors: $error');
+      print('Error fetching all liquors: $error');
     }
   }
 
-  void handleLiquorClick(dynamic liquor) async{
+  Future<void> handleLiquorClick(dynamic liquor) async{
     setState(() {
       selectedLiquor = liquor;
     });
@@ -175,23 +192,25 @@ class _LiquorPageState extends State<LiquorList> {
     );
   }
 
-Future<void> checkFav(dynamic selectedLiquor) async {
-  print("original boolean = $favBoolean");
-  List<dynamic> favorites = selectedLiquor['Favorites'];
-  print("$selectedLiquor['Favorites']");
-  setState(() {
-    favBoolean = (favorites.contains(_userId.toString()));
-  });
-  print("new boolean = $favBoolean");
-}
+  Future<void> checkFav(dynamic selectedLiquor) async {
+    print("original boolean = $favBoolean");
+    List<dynamic> favorites = selectedLiquor['Favorites'];
+    print("$selectedLiquor['Favorites']");
+    setState(() {
+      favBoolean = (favorites.contains(_userId.toString()));
+    });
+    print("new boolean = $favBoolean");
+  }
 
-//Get User's rating
-Future<void> getRating(dynamic selectedLiquor) async {
-  try {
-    var uri = Uri.parse(buildPath('api/userRating')).
-    replace(queryParameters: {'UserId': _userId, 
-                              '_id': selectedLiquor['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+  //Get User's rating
+  Future<void> getRating(dynamic selectedLiquor) async {
+    try {
+      var uri = Uri.parse(buildPath('api/userLiquorRating')).replace(
+          queryParameters: {
+            'UserId': _userId, 
+            '_id': selectedLiquor['_id']
+          });
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
       setState(() {
@@ -213,53 +232,56 @@ Future<void> getRating(dynamic selectedLiquor) async {
       });
     print('User rating does not exist: $error');
   }
-}
-
-//Get Avg ratings
-Future<void> getAvgRatings(dynamic selectedLiquor) async {
-  try {
-    var uri = Uri.parse(buildPath('api/liquorRatings')).replace(queryParameters: {'_id': selectedLiquor['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      setState(() {
-        avgRating = data['avgRating'];
-      });
-      print('Successfully retrieved average ratings. avgRating: $avgRating');
-    }
-  } catch (error) {
-    print('Error getting ratings: $error');
   }
-}
 
-//Get users comments
-Future<void> getComments(dynamic selectedLiquor) async {
-  try {
-    var uri = Uri.parse(buildPath('api/getLiquorComments')).replace(queryParameters: {'_id': selectedLiquor['_id']});
-    var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      setState(() {
-        comments = List<Map<String, dynamic>>.from(data['comments']);
-      });
-      print('Successfully retrieved comments. comments: $comments');
+  //Get Avg ratings
+  Future<void> getAvgRatings(dynamic selectedLiquor) async {
+    try {
+      var uri = Uri.parse(buildPath('api/liquorRatings')).replace(queryParameters: {'_id': selectedLiquor['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          avgRating = data['avgRating'];
+        });
+        print('Successfully retrieved average ratings. avgRating: $avgRating');
+      }
+    } catch (error) {
+      print('Error getting ratings: $error');
     }
-  } catch (error) {
-    print('Error getting comments: $error');
   }
-}
+
+  //Get users comments
+  Future<void> getComments(dynamic selectedLiquor) async {
+    try {
+      var uri = Uri.parse(buildPath('api/getLiquorComments')).replace(queryParameters: {'_id': selectedLiquor['_id']});
+      var response = await http.get(uri, headers: {'Content-Type': 'application/json'});
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+        setState(() {
+          comments = List<Map<String, dynamic>>.from(data['comments']);
+        });
+        print('Successfully retrieved comments. comments: $comments');
+      }
+    } catch (error) {
+      print('Error getting comments: $error');
+    }
+  }
+
   //Unfavorites Liquor
   void unfavLiquor() async {
     try {
       var response = await http.post(Uri.parse(buildPath('api/unfavoriteLiquor')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
-                              '_id': selectedLiquor['_id']}));
+          body: json.encode({
+            'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+            '_id': selectedLiquor['_id']
+          }));
       if (response.statusCode == 200) {
         setState(() {
           favBoolean = false;
         });
-        fetchAllLiquors(); //Call function to refresh liquor list to show that Favorites has been edited.
+        fetchAllLiquors(); 
       print('Successfully unfavorited. favBoolean: $favBoolean');
       }
     } 
@@ -273,13 +295,15 @@ Future<void> getComments(dynamic selectedLiquor) async {
       try {
       var response = await http.post(Uri.parse(buildPath('api/favoriteLiquor')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(),
-                            '_id': selectedLiquor['_id']}));
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedLiquor['_id']
+          }));
       if (response.statusCode == 200) {
         setState(() {
           favBoolean = true;
         });
-        fetchAllLiquors(); //Call function to refresh liquor list to show that Favorites has been edited.
+        fetchAllLiquors(); 
         print('Successfully favorited. favBoolean: $favBoolean');
       }
     } 
@@ -293,12 +317,14 @@ Future<void> getComments(dynamic selectedLiquor) async {
       try {
       var response = await http.post(Uri.parse(buildPath('api/rateLiquor')),
           headers: {'Content-Type': 'application/json'},
-          body: json.encode({'UserId': _userId.toString(),
-                            '_id': selectedLiquor['_id'],
-                            'Stars': rating,
-                            'Comment': comment,}));
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedLiquor['_id'],
+            'Stars': rating,
+            'Comment': comment,
+          }));
       if (response.statusCode == 200) {
-        fetchAllLiquors(); //Call function to refresh liquor list to show that Favorites has been edited.
+        fetchAllLiquors(); 
         print('Successfully rated and commented');
       }
     } 
@@ -339,18 +365,16 @@ Future<void> getComments(dynamic selectedLiquor) async {
     List<dynamic> filteredLiquors = [];
     if (filterSelection == 'Favorites' && _userId != null) {
       filteredLiquors = liquors.where((liquor) => liquor['Favorites']?.contains(_userId.toString()) ?? false).toList();
-    } else if (filterSelection == 'Whiskey and Scotch') {
-      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Whiskey' || liquor['Style'] == 'Scotch').toList();
-    } else if (filterSelection == 'Vodka') {
-      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Vodka').toList();
-    }  else if (filterSelection == 'Rum') {
-      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Rum').toList();
-    } else if (filterSelection == 'Gin') {
-      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Gin').toList();
-    } else if (filterSelection == 'Tequila') {
-      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Tequila').toList();
-    } else if (filterSelection == 'Brandy and Cognac') {
-      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Brandy' || liquor['Style'] == 'Cognac').toList();
+    } else if (filterSelection == 'Red') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Red').toList();
+    } else if (filterSelection == 'White') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'White').toList();
+    } else if (filterSelection == 'Sparkling') {
+      filteredLiquors = liquors.where((liquor) => liquor['Style'] == 'Sparkling').toList();
+    } else if (filterSelection == 'Calories < 125') {
+      filteredLiquors = liquors.where((liquor) => liquor['Calories'] < 125).toList();
+    } else if (filterSelection == 'USA Origin') {
+      filteredLiquors = liquors.where((liquor) => liquor['Origin'] == 'USA').toList();
     } else {
       filteredLiquors = liquors;
     }
@@ -384,14 +408,21 @@ Future<void> getComments(dynamic selectedLiquor) async {
       children: <Widget>[
         Container(
           padding: const EdgeInsets.all(10),
-          child: const Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // Image.asset('assets/images/Liquor-glass-left.png'),
-              Text('Liquor List', style: TextStyle(fontSize: 24)),
-              // Image.asset('assets/images/Liquor-glass-right.png'),
-            ],
-          ),
+          child: Stack(
+          children: <Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: widget.onBack, 
+              ),
+            ),
+            const Align(
+              alignment: Alignment.center,
+              child: Text('Liquor List', style: TextStyle(fontSize: 24)),
+            ),
+          ],
+        ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -416,7 +447,7 @@ Future<void> getComments(dynamic selectedLiquor) async {
             ],
           ),
         ),
-        //Dropdown Menu
+        //Filter Menu
         Container(
           padding: const EdgeInsets.all(10),
           child: DropdownButton<String>(
@@ -425,12 +456,11 @@ Future<void> getComments(dynamic selectedLiquor) async {
             items: <String>[
               '',
               'Favorites',
-              'Whiskey and Scotch',
-              'Vodka',
-              'Rum',
-              'Gin',
-              'Tequila',
-              'Brandy and Cognac',
+              'Red',
+              'White',
+              'Sparkling',
+              'Calories < 125',
+              'USA Origin',
             ].map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
@@ -482,4 +512,198 @@ Future<void> getComments(dynamic selectedLiquor) async {
       ],
     );
   }
+}
+
+class LiquoroftheMonth extends StatefulWidget {
+  final VoidCallback onExploreFullList;
+
+  const LiquoroftheMonth({required this.onExploreFullList, super.key});
+
+  @override
+  _LiquoroftheMonthState createState() => _LiquoroftheMonthState();
+}
+
+class _LiquoroftheMonthState extends State<LiquoroftheMonth> {
+  final String app_name = 'paradise-pours-4be127640468';
+  String buildPath(String route) {
+    return 'https://$app_name.herokuapp.com/$route';
+  }
+
+  dynamic LiquoroftheMonth;
+  bool isLoading = true;
+  dynamic selectedLiquor;
+  int? _userId; 
+  bool favBoolean = false; 
+  late AuthService authService;
+
+@override
+  void initState() {
+    super.initState();
+    authService = AuthService();
+    _loadUserData();
+    fetchLiquoroftheMonth();
+  }
+
+  //Initializes user id.
+  Future<void> _loadUserData() async {
+    final authService = AuthService();
+    final user = await authService.getUser();
+    if (user != null) {
+      setState(() {
+        _userId = user.userId;
+      });
+    }
+  }
+
+  Future<void> fetchLiquoroftheMonth() async {
+    dynamic storedLiquor = await authService.getLiquorOfTheMonth();
+
+    if (storedLiquor != null) {
+      setState(() {
+        LiquoroftheMonth = storedLiquor;
+        isLoading = false;
+      });
+      await loadWOTM(storedLiquor);
+    } else {
+      try {
+        var response = await http.post(Uri.parse(buildPath('api/searchLiquor')),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'Name': ''}));
+        List<dynamic> liquors = json.decode(response.body)['liquor'];
+        liquors.shuffle();
+        if (liquors.isNotEmpty) {
+          selectedLiquor = liquors.first;
+          await loadWOTM(selectedLiquor);
+          await authService.saveLiquorOfTheMonth(selectedLiquor);
+        }
+        setState(() {
+          LiquoroftheMonth = liquors.isNotEmpty ? liquors.first : null;
+          isLoading = false;
+        });
+      } catch (error) {
+        print('Error fetching liquor of the month: $error');
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  //Unfavorites Liquor
+  void unfavWOTMLiquor() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/unfavoriteLiquor')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(), //Needs to be converted to string because the userIds were stored as string in Favorites.
+            '_id': selectedLiquor['_id']
+          }));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = false;
+        });
+        fetchLiquoroftheMonth(); 
+        print('Successfully unfavorited. favWOTMBoolean: $favBoolean');
+      }
+    } catch (error) {
+      print('Error unfavoriting: $error');
+    }
+  }
+
+  //Favorites Liquor
+  void favWOTMLiquor() async {
+    try {
+      var response = await http.post(Uri.parse(buildPath('api/favoriteLiquor')),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode({
+            'UserId': _userId.toString(),
+            '_id': selectedLiquor['_id']
+          }));
+      if (response.statusCode == 200) {
+        setState(() {
+          favBoolean = true;
+        });
+        fetchLiquoroftheMonth(); 
+        print('Successfully favorited. favWOTMBoolean: $favBoolean');
+      }
+    } catch (error) {
+      print('Error favoriting: $error');
+    }
+  }
+
+  Future<void> loadWOTM(dynamic liquor) async {
+    setState(() {
+      selectedLiquor = liquor;
+    });
+
+    await Future.wait([
+      checkWOTMFav(selectedLiquor),
+    ]);
+  }
+
+  Future<void> checkWOTMFav(dynamic selectedLiquor) async {
+    List<dynamic> favorites = selectedLiquor['Favorites'];
+    setState(() {
+      favBoolean = (favorites.contains(_userId.toString()));
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+  return Column(
+      children: [
+        if (LiquoroftheMonth != null) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset(
+                  'assets/images/cocktail-list-header1.png',
+                  height: 24,
+                ),
+                const SizedBox(width: 8), 
+                Text(
+                  'Liquor Of The Month',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.redAccent.withAlpha(150),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(width: 8),
+                Image.asset(
+                  'assets/images/cocktail-list-header1.png',
+                  height: 24,
+                ),
+              ],
+            ),
+          ),
+          SpecialDrink(
+            drink: LiquoroftheMonth,
+            userId: _userId,
+            favBoolean: favBoolean,
+            favDrink: favWOTMLiquor,
+            unfavDrink: unfavWOTMLiquor,
+          ),
+        ],
+        Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: ElevatedButton(
+            onPressed: widget.onExploreFullList,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent.withAlpha(150),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Explore our full liquor selection'),
+          ),
+        ),
+      ],
+    );
+  } 
 }

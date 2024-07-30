@@ -48,6 +48,8 @@ class AuthService extends ChangeNotifier {
   static const String _beerOfTheDayDateKey = 'beerOfTheDayDate';
   static const String _wineOfTheMonthKey = 'wine_of_the_week';
   static const String _wineOfTheMonthDateKey = 'wine_of_the_week_date';
+    static const String _liquorOfTheMonthKey = 'liquor_of_the_month';
+  static const String _liquorOfTheMonthDateKey = 'liquor_of_the_month_date';
 
   //Saves User data from api login call
   Future<void> saveUser(User user) async {
@@ -128,10 +130,42 @@ class AuthService extends ChangeNotifier {
     return null;
   }
 
+    // Saves Wine of the Month
+  Future<void> saveLiquorOfTheMonth(Map<String, dynamic> wine) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_liquorOfTheMonthKey, jsonEncode(wine));
+    await prefs.setString(_liquorOfTheMonthDateKey, DateTime.now().toIso8601String());
+  }
+
+  // Retrieves Wine of the Week
+  Future<Map<String, dynamic>?> getLiquorOfTheMonth() async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? liquorString = prefs.getString(_liquorOfTheMonthKey);
+    String? dateString = prefs.getString(_liquorOfTheMonthDateKey);
+
+    if (liquorString != null && dateString != null) {
+      DateTime storedDate = DateTime.parse(dateString);
+      DateTime currentDate = DateTime.now();
+      // Get the week of the year for storedDate and currentDate
+      int storedMonth = monthOfYear(storedDate);
+      int currentMonth = monthOfYear(currentDate);
+
+      if (storedMonth == currentMonth && storedDate.year == currentDate.year) {
+        return jsonDecode(liquorString);
+      }
+    }
+    return null;
+  }
+
   // Helper function to get the week of the year
   int weekOfYear(DateTime date) {
     var firstDayOfYear = DateTime(date.year, 1, 1);
     var daysDifference = date.difference(firstDayOfYear).inDays;
     return ((daysDifference + firstDayOfYear.weekday) / 7).ceil();
+  }
+
+  // Helper function to get the month of the year
+  int monthOfYear(DateTime date) {
+    return date.month;
   }
 }

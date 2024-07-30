@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print, library_private_types_in_public_api, non_constant_identifier_names, use_build_context_synchronously, prefer_const_constructors
+// ignore_for_file: avoid_print, library_private_types_in_public_api, non_constant_identifier_names, use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:paradise_pours_app/auth_service.dart';
@@ -120,7 +120,7 @@ class _LiquorListState extends State<LiquorList> {
   bool favBoolean = false; //Used as a checker if user liked a liquor. Will be used to passed down for favorite.
   int userRating = 0; //User rating
   int index = 0;
-  double avgRating = 0; //Avg Ratings of drink
+  dynamic avgRating = 0; //Avg Ratings of drink
   List<Map<String, dynamic>> comments = []; //Comments of drink
 
   @override
@@ -559,15 +559,11 @@ class _LiquoroftheMonthState extends State<LiquoroftheMonth> {
     dynamic storedLiquor = await authService.getLiquorOfTheMonth();
 
     if (storedLiquor != null) {
-      var response = await http.post(Uri.parse(buildPath('api/searchLiquor')),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({'Name': storedLiquor['Name']}));
-            var liquors = json.decode(response.body)['liquor'][0];
       setState(() {
-        LiquoroftheMonth = liquors;
+        LiquoroftheMonth = storedLiquor;
         isLoading = false;
       });
-      await loadWOTM(LiquoroftheMonth);
+      await loadWOTM(storedLiquor);
     } else {
       try {
         var response = await http.post(Uri.parse(buildPath('api/searchLiquor')),

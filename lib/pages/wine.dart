@@ -121,7 +121,7 @@ class _WineListState extends State<WineList> {
   bool favBoolean = false; //Used as a checker if user liked a wine. Will be used to passed down for favorite.
   int userRating = 0; //User rating
   int index = 0;
-  double avgRating = 0; //Avg Ratings of drink
+  dynamic avgRating = 0; //Avg Ratings of drink
   List<Map<String, dynamic>> comments = []; //Comments of drink
 
   @override
@@ -560,15 +560,11 @@ class _WineOfTheMonthState extends State<WineOfTheMonth> {
     dynamic storedWine = await authService.getWineOfTheMonth();
 
     if (storedWine != null) {
-      var response = await http.post(Uri.parse(buildPath('api/searchWine')),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({'Name': storedWine['Name']}));
-            var wines = json.decode(response.body)['wine'][0];
       setState(() {
-        wineOfTheMonth = wines;
+        wineOfTheMonth = storedWine;
         isLoading = false;
       });
-      await loadWOTM(wineOfTheMonth);
+      await loadWOTM(storedWine);
     } else {
       try {
         var response = await http.post(Uri.parse(buildPath('api/searchWine')),

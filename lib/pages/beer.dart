@@ -121,7 +121,7 @@ class _BeerListState extends State<BeerList> {
   bool favBoolean = false; //Used as a checker if user liked a beer. Will be used to passed down for favorite.
   int userRating = 0; //User rating
   int index = 0;
-  double avgRating = 0; //Avg Ratings of drink
+  dynamic avgRating = 0; //Avg Ratings of drink
   List<Map<String, dynamic>> comments = []; //Comments of drink
 
   @override //Similar to useEffect()
@@ -566,15 +566,11 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
     dynamic storedBeer = await authService.getBeerOfTheDay();
 
     if (storedBeer != null) {
-      var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
-            headers: {'Content-Type': 'application/json'},
-            body: json.encode({'Name': storedBeer['Name']}));
-            var beers = json.decode(response.body)['beer'][0];
       setState(() {
-        beerOfTheDay = beers;
+        beerOfTheDay = storedBeer;
         isLoading = false;
       });
-      await loadBOTD(beerOfTheDay);
+      await loadBOTD(storedBeer);
     } else {
       try {
         var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
@@ -613,7 +609,7 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
   Future<void> checkBOTDFav(dynamic selectedBeer) async {
     List<dynamic> favorites = selectedBeer['Favorites'];
     setState(() {
-      favBoolean = favorites.contains(_userId.toString());
+      favBoolean = (favorites.contains(_userId.toString()));
     });
   }
 

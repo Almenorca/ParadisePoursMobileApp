@@ -36,6 +36,8 @@ class _RatingsState extends State<Ratings> {
     super.initState();
     _rating = widget.userRating;
     _index = widget.index;
+    _pageController = PageController(initialPage: _index);
+  
     if(widget.index > 0){ //Used to flag if user already commented.
       flag = 1;
       print(flag);
@@ -158,7 +160,7 @@ class _RatingsState extends State<Ratings> {
                         controller: _pageController,
                         itemCount: widget.comments.length,
                         itemBuilder: (context, index) {
-                          final rating = widget.comments[_index]['Rating'];
+                          final rating = widget.comments[index]['Rating'];
                           return Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
@@ -179,7 +181,7 @@ class _RatingsState extends State<Ratings> {
                                 SizedBox(height: 12),
                                 // Display comment
                                 Text(
-                                  widget.comments[_index]['Comment'] ?? 'No comment',
+                                  widget.comments[index]['Comment'] ?? 'No comment',
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.w500,

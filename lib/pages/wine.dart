@@ -560,11 +560,15 @@ class _WineOfTheMonthState extends State<WineOfTheMonth> {
     dynamic storedWine = await authService.getWineOfTheMonth();
 
     if (storedWine != null) {
+      var response = await http.post(Uri.parse(buildPath('api/searchWine')),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'Name': storedWine['Name']}));
+            var wines = json.decode(response.body)['wine'][0];
       setState(() {
-        wineOfTheMonth = storedWine;
+        wineOfTheMonth = wines;
         isLoading = false;
       });
-      await loadWOTM(storedWine);
+      await loadWOTM(wineOfTheMonth);
     } else {
       try {
         var response = await http.post(Uri.parse(buildPath('api/searchWine')),

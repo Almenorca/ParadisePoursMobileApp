@@ -566,11 +566,15 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
     dynamic storedBeer = await authService.getBeerOfTheDay();
 
     if (storedBeer != null) {
+      var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
+            headers: {'Content-Type': 'application/json'},
+            body: json.encode({'Name': storedBeer['Name']}));
+            var beers = json.decode(response.body)['beer'][0];
       setState(() {
-        beerOfTheDay = storedBeer;
+        beerOfTheDay = beers;
         isLoading = false;
       });
-      await loadBOTD(storedBeer);
+      await loadBOTD(beerOfTheDay);
     } else {
       try {
         var response = await http.post(Uri.parse(buildPath('api/searchBeer')),
@@ -609,7 +613,7 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
   Future<void> checkBOTDFav(dynamic selectedBeer) async {
     List<dynamic> favorites = selectedBeer['Favorites'];
     setState(() {
-      favBoolean = (favorites.contains(_userId.toString()));
+      favBoolean = favorites.contains(_userId.toString());
     });
   }
 

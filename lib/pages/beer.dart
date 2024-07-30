@@ -543,11 +543,23 @@ class _BeerOfTheDayState extends State<BeerOfTheDay> {
   bool favBoolean = false; 
   late AuthService authService;
 
-  @override
+@override
   void initState() {
     super.initState();
     authService = AuthService();
+    _loadUserData();
     fetchBeerOfTheDay();
+  }
+
+  //Initializes user id.
+  Future<void> _loadUserData() async {
+    final authService = AuthService();
+    final user = await authService.getUser();
+    if (user != null) {
+      setState(() {
+        _userId = user.userId;
+      });
+    }
   }
 
   Future<void> fetchBeerOfTheDay() async {

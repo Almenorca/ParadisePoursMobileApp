@@ -672,7 +672,7 @@ class _LiquoroftheMonthState extends State<LiquoroftheMonth> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.redAccent.withAlpha(150),
+                    color: Color.fromRGBO(204, 85, 0, 0.35),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -697,7 +697,7 @@ class _LiquoroftheMonthState extends State<LiquoroftheMonth> {
           child: ElevatedButton(
             onPressed: widget.onExploreFullList,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent.withAlpha(150),
+              backgroundColor: Color.fromRGBO(204, 85, 0, 0.35),
               foregroundColor: Colors.white,
             ),
             child: const Text('Explore our full liquor selection'),

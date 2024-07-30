@@ -536,10 +536,23 @@ class _WineOfTheMonthState extends State<WineOfTheMonth> {
   int? _userId; 
   bool favBoolean = false; 
 
-  @override
+@override
   void initState() {
     super.initState();
-    fetchWineOfTheMonth();
+    authService = AuthService();
+    _loadUserData();
+    fetchBeerOfTheDay();
+  }
+
+  //Initializes user id.
+  Future<void> _loadUserData() async {
+    final authService = AuthService();
+    final user = await authService.getUser();
+    if (user != null) {
+      setState(() {
+        _userId = user.userId;
+      });
+    }
   }
 
   Future<void> fetchWineOfTheMonth() async {

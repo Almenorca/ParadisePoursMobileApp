@@ -535,13 +535,14 @@ class _WineOfTheMonthState extends State<WineOfTheMonth> {
   dynamic selectedWine;
   int? _userId; 
   bool favBoolean = false; 
+  late AuthService authService;
 
 @override
   void initState() {
     super.initState();
     authService = AuthService();
     _loadUserData();
-    fetchBeerOfTheDay();
+    fetchWineOfTheMonth();
   }
 
   //Initializes user id.
@@ -556,7 +557,6 @@ class _WineOfTheMonthState extends State<WineOfTheMonth> {
   }
 
   Future<void> fetchWineOfTheMonth() async {
-    final authService = AuthService();
     dynamic storedWine = await authService.getWineOfTheMonth();
 
     if (storedWine != null) {
@@ -666,7 +666,7 @@ class _WineOfTheMonthState extends State<WineOfTheMonth> {
                 FaIcon(FontAwesomeIcons.wineGlassEmpty, color: Colors.redAccent.withAlpha(150),),
                 const SizedBox(width: 8), 
                 Text(
-                  'Wine Of The Month',
+                  'Wine Of The Week',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

@@ -46,8 +46,8 @@ class AuthService extends ChangeNotifier {
   static const String _userKey = 'user'; //Key used to mark user data.
   static const String _beerOfTheDayKey = 'beerOfTheDay';
   static const String _beerOfTheDayDateKey = 'beerOfTheDayDate';
-  static const String _wineOfTheMonthKey = 'wineOfTheMonth';
-  static const String _wineOfTheMonthDateKey = 'wineOfTheMonthDate';
+  static const String _wineOfTheMonthKey = 'wine_of_the_week';
+  static const String _wineOfTheMonthDateKey = 'wine_of_the_week_date';
 
   //Saves User data from api login call
   Future<void> saveUser(User user) async {
@@ -105,10 +105,10 @@ class AuthService extends ChangeNotifier {
   Future<void> saveWineOfTheMonth(Map<String, dynamic> wine) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString(_wineOfTheMonthKey, jsonEncode(wine));
-    await prefs.setString(_wineOfTheMonthDateKey, DateTime.now().toIso8601String().split('T').first);
+    await prefs.setString(_wineOfTheMonthDateKey, DateTime.now().toIso8601String());
   }
 
-  // Retrieves Wine of the Month
+  // Retrieves Wine of the Week
   Future<Map<String, dynamic>?> getWineOfTheMonth() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     String? wineString = prefs.getString(_wineOfTheMonthKey);
@@ -117,10 +117,21 @@ class AuthService extends ChangeNotifier {
     if (wineString != null && dateString != null) {
       DateTime storedDate = DateTime.parse(dateString);
       DateTime currentDate = DateTime.now();
-      if (storedDate.month == currentDate.month) {
+      // Get the week of the year for storedDate and currentDate
+      int storedWeek = weekOfYear(storedDate);
+      int currentWeek = weekOfYear(currentDate);
+
+      if (storedWeek == currentWeek && storedDate.year == currentDate.year) {
         return jsonDecode(wineString);
       }
     }
     return null;
+  }
+
+  // Helper function to get the week of the year
+  int weekOfYear(DateTime date) {
+    var firstDayOfYear = DateTime(date.year, 1, 1);
+    var daysDifference = date.difference(firstDayOfYear).inDays;
+    return ((daysDifference + firstDayOfYear.weekday) / 7).ceil();
   }
 }
